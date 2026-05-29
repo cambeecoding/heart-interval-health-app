@@ -62,7 +62,9 @@ final class AudioService: AudioServiceProtocol {
         utterance.rate   = AVSpeechUtteranceDefaultSpeechRate
         utterance.volume = 1.0
         let localeTag = Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
-        utterance.voice = AVSpeechSynthesisVoice(language: localeTag)
+        utterance.voice = AVSpeechSynthesisVoice(identifier: "com.apple.voice.enhanced.en-GB.Serena")
+                       ?? AVSpeechSynthesisVoice(identifier: "com.apple.ttsbundle.siri_Nicky_en-US_premium")
+                       ?? AVSpeechSynthesisVoice(language: localeTag)
                        ?? AVSpeechSynthesisVoice(language: "en-US")
         synthesizer.speak(utterance)
     }
