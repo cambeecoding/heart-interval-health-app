@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- HealthKit usage description (required) -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>Heart Interval reads your heart rate from Apple Health to track exercise metrics.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Heart Interval does not write health data.</string>
+
+    <!-- Background audio so speech fires when screen is off -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
+
+    <!-- Prevent rotation -->
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+</dict>
+</plist>
