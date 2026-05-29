@@ -7,27 +7,25 @@ struct StandbyView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            VStack(spacing: 40) {
+            VStack(spacing: 0) {
                 Spacer()
 
-                // Central graphic
-                ZStack {
-                    Circle()
-                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-                        .frame(width: 160, height: 160)
-                    Image(systemName: "heart.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 64, height: 64)
-                        .foregroundColor(.white.opacity(0.85))
-                }
-
-                Text("Heart Interval")
-                    .font(.title2)
+                Text("BeatZone")
+                    .font(.title)
                     .fontWeight(.light)
                     .foregroundColor(.white.opacity(0.6))
 
+                // HR source status label
+                let status = viewModel.hrSourceStatus
+                if !status.message.isEmpty {
+                    Text(status.message)
+                        .font(.footnote)
+                        .foregroundColor(status.isReady ? .green.opacity(0.8) : .orange.opacity(0.7))
+                        .padding(.top, 6)
+                }
+
                 Spacer()
+                    .frame(height: 32)
 
                 // Announcement interval toggle — only configurable before starting
                 HStack(spacing: 0) {
@@ -48,6 +46,11 @@ struct StandbyView: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                .padding(.bottom, 24)
+
+                // Dual-handle HR range slider
+                HRRangeSlider(range: 60...200, low: $viewModel.minHR, high: $viewModel.maxHR)
+                    .padding(.bottom, 28)
 
                 Button(action: { viewModel.startExercise() }) {
                     Text("START")

@@ -8,6 +8,9 @@ struct ContentView: View {
             Color.black.ignoresSafeArea()
 
             switch viewModel.appState {
+            case .launching:
+                SplashView()
+                    .transition(.opacity)
             case .standby:
                 StandbyView(viewModel: viewModel)
                     .transition(.opacity)

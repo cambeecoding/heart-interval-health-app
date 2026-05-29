@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 
 enum AppState {
+    case launching  // initial splash while app and BLE initialise
     case standby
     case starting
     case exercising
@@ -18,25 +19,34 @@ enum HRSource {
 final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Published state
-    @Published var appState: AppState        = .standby
+    @Published var appState: AppState        = .launching
     @Published var currentHR: Int?           = nil
-    @Published var lastMinuteAvgHR: Int?     = nil
     @Published var totalAvgHR: Int?          = nil
     @Published var elapsedSeconds: Int       = 0
     @Published var secondsInWindow: Int      = 0
     @Published var secondsSinceLastHR: Int?  = nil
     @Published var hrSource: HRSource        = .none
     @Published var bleStatus: String         = ""
-    /// When true: announce every 30 s, current HR only.
-    /// When false: announce every 60 s, last-minute avg + current HR.
+    /// When true: announce current HR every 30 s + total avg every 60 s.
+    /// When false: announce current HR + total avg every 60 s.
     @Published var shortInterval: Bool       = true
+
+    // MARK: - UserDefaults-backed HR range (triggers objectWillChange for SwiftUI)
+    var minHR: Int {
+        get { UserDefaults.standard.object(forKey: "minHR") as? Int ?? 120 }
+        set { UserDefaults.standard.set(newValue, forKey: "minHR"); objectWillChange.send() }
+    }
+    var maxHR: Int {
+        get { UserDefaults.standard.object(forKey: "maxHR") as? Int ?? 160 }
+        set { UserDefaults.standard.set(newValue, forKey: "maxHR"); objectWillChange.send() }
+    }
 
     /// The interval driving the ring/counter — always 30s in short mode so ring reflects next announcement.
     var announcementInterval: Int { shortInterval ? 30 : 60 }
 
     // MARK: - Services
     private let bleService       = BLEHeartRateService()
-    private let healthKitService = HealthKitService()
+    let healthKitService         = HealthKitService()
     let audioService: AudioServiceProtocol
     private let workoutManager   = WorkoutManager()
 
@@ -46,8 +56,11 @@ final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Samples
     private var allSamples:    [Double] = []
-    private var windowSamples: [Double] = []
     private var lastSampleDate: Date?
+
+    // MARK: - Zone breach tracking
+    private var isAboveMax = false
+    private var isBelowMin = false
 
     // MARK: - Init
 
@@ -77,6 +90,15 @@ final class ExerciseViewModel: ObservableObject {
                 }
             }
         }
+
+        // Start BLE scanning immediately so we can show HR source status on standby
+        bleService.startScanning()
+
+        // Give BLE + HealthKit a moment to initialise before showing standby
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            if appState == .launching { appState = .standby }
+        }
     }
 
     @objc private func appDidBecomeActive() {
@@ -85,25 +107,47 @@ final class ExerciseViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Computed HR source status
+
+    var hrSourceStatus: (message: String, isReady: Bool) {
+        // BLE connected takes priority
+        if hrSource == .ble || bleStatus == "HR monitor connected" {
+            return ("Heart rate monitor connected", true)
+        }
+        // BLE scanning/connecting
+        if !bleStatus.isEmpty && bleStatus != "HR monitor disconnected — reconnecting…" {
+            // Check if HealthKit is authorized as fallback
+            if healthKitService.isAuthorized() {
+                return ("Using Apple Watch via Health", true)
+            }
+            return (bleStatus, false)
+        }
+        // BLE disconnected
+        if healthKitService.isAuthorized() {
+            return ("Using Apple Watch via Health", true)
+        }
+        return ("No heart rate source detected", false)
+    }
+
     // MARK: - Actions
 
     func startExercise() {
         allSamples         = []
-        windowSamples      = []
         currentHR          = nil
-        lastMinuteAvgHR    = nil
         totalAvgHR         = nil
         elapsedSeconds     = 0
         secondsInWindow    = 0
         secondsSinceLastHR = nil
         lastSampleDate     = nil
         hrSource           = .none
-        bleStatus          = ""
 
         appState = .starting
         workoutManager.beginExercise()
         audioService.startSilentLoop()
-        bleService.start()
+
+        // BLE is already scanning from init; just mark as exercising so
+        // disconnect handler auto-reconnects instead of returning to scan
+        bleService.isExercising = true
 
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 150_000_000)
@@ -135,26 +179,26 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     func continueExercise() {
-        windowSamples = []
         appState = .exercising
         startTimers()
     }
 
     func endExercise() {
         stopTimers()
-        bleService.stop()
+        // Return to scanning so standby shows live BLE status
+        bleService.returnToScanning()
         healthKitService.stopObservingHeartRate()
         workoutManager.endExercise()
         audioService.stopSilentLoop()
         appState           = .standby
         currentHR          = nil
-        lastMinuteAvgHR    = nil
         totalAvgHR         = nil
         elapsedSeconds     = 0
         secondsInWindow    = 0
         secondsSinceLastHR = nil
         hrSource           = .none
-        bleStatus          = ""
+        isAboveMax         = false
+        isBelowMin         = false
     }
 
     // MARK: - Private helpers
@@ -167,9 +211,29 @@ final class ExerciseViewModel: ObservableObject {
         hrSource           = source
         secondsSinceLastHR = 0
         allSamples.append(bpm)
-        windowSamples.append(bpm)
         currentHR  = Int(bpm.rounded())
         totalAvgHR = average(of: allSamples)
+        checkZoneBreaches()
+    }
+
+    private func checkZoneBreaches() {
+        guard appState == .exercising, let hr = currentHR else { return }
+        if hr > maxHR {
+            if !isAboveMax {
+                isAboveMax = true
+                audioService.speak("Maximum heart rate reached")
+            }
+        } else {
+            isAboveMax = false
+        }
+        if hr < minHR {
+            if !isBelowMin {
+                isBelowMin = true
+                audioService.speak("Minimum heart rate reached")
+            }
+        } else {
+            isBelowMin = false
+        }
     }
 
     private func startTimers() {
@@ -217,12 +281,10 @@ final class ExerciseViewModel: ObservableObject {
         announcementTimer?.invalidate(); announcementTimer = nil
     }
 
-    /// Fires at the 60 s boundary — full announcement + window reset.
+    /// Fires at the 60 s boundary — announces current HR + total avg, resets window counter.
     func onFullMinuteTick() {
-        lastMinuteAvgHR = average(of: windowSamples)
-        windowSamples   = []
         secondsInWindow = 0
-        announceMetrics(includeTotal: false)
+        announceMetrics(includeTotal: true)
     }
 
     /// Fires at the 30 s midpoint in short mode — current HR only, no window reset.
@@ -233,12 +295,9 @@ final class ExerciseViewModel: ObservableObject {
         }
     }
 
-    /// Full announcement: last-minute avg (if available) + current + optionally total.
+    /// Announces current HR, and optionally the total session average.
     func announceMetrics(includeTotal: Bool) {
         var parts: [String] = []
-        if let last = lastMinuteAvgHR {
-            parts.append("Last minute \(last) B.P.M.")
-        }
         if let current = currentHR {
             parts.append("Current \(current) B.P.M.")
         }
