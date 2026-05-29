@@ -2,10 +2,11 @@ import HealthKit
 
 final class HealthKitService {
 
-    private let store = HKHealthStore()
+    private let store  = HKHealthStore()
     private let hrType = HKQuantityType(.heartRate)
-    private var query: HKAnchoredObjectQuery?
-    private var anchor: HKQueryAnchor?
+
+    private var observerQuery: HKObserverQuery?
+    private var pollTimer: Timer?
 
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
@@ -17,35 +18,50 @@ final class HealthKitService {
         }
     }
 
-    /// Starts a live HKAnchoredObjectQuery that calls `handler` for every new HR sample.
-    func startObservingHeartRate(handler: @escaping (Double) -> Void) {
+    /// Calls handler with (bpm, sampleDate) — date lets the caller deduplicate.
+    func startObservingHeartRate(handler: @escaping (Double, Date) -> Void) {
         let unit = HKUnit.count().unitDivided(by: .minute())
 
-        let updateHandler: HKAnchoredObjectQueryHandler = { [weak self] query, samples, _, newAnchor, _ in
-            self?.anchor = newAnchor
-            guard let samples = samples as? [HKQuantitySample] else { return }
-            for sample in samples {
-                let bpm = sample.quantity.doubleValue(for: unit)
-                handler(bpm)
-            }
-        }
+        store.enableBackgroundDelivery(for: hrType, frequency: .immediate) { _, _ in }
 
-        let q = HKAnchoredObjectQuery(
-            type: hrType,
-            predicate: nil,
-            anchor: anchor,
-            limit: HKObjectQueryNoLimit,
-            resultsHandler: updateHandler
+        let observer = HKObserverQuery(sampleType: hrType, predicate: nil) { [weak self] _, completionHandler, error in
+            guard error == nil else { completionHandler(); return }
+            self?.fetchLatestSample(unit: unit, handler: handler)
+            completionHandler()
+        }
+        store.execute(observer)
+        observerQuery = observer
+
+        // 5-second polling fallback for Garmin's inconsistent batch writes
+        let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
+            self?.fetchLatestSample(unit: unit, handler: handler)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        pollTimer = timer
+
+        fetchLatestSample(unit: unit, handler: handler)
+    }
+
+    private func fetchLatestSample(unit: HKUnit, handler: @escaping (Double, Date) -> Void) {
+        // Only accept samples written in the last 5 minutes — prevents stale
+        // resting-HR readings (e.g. 57bpm from hours ago) from being displayed
+        let freshPredicate = HKQuery.predicateForSamples(
+            withStart: Date().addingTimeInterval(-300),
+            end: nil,
+            options: []
         )
-        q.updateHandler = updateHandler
-        store.execute(q)
-        query = q
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let query = HKSampleQuery(sampleType: hrType, predicate: freshPredicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+            guard let sample = samples?.first as? HKQuantitySample else { return }
+            let bpm = sample.quantity.doubleValue(for: unit)
+            handler(bpm, sample.endDate)
+        }
+        store.execute(query)
     }
 
     func stopObservingHeartRate() {
-        if let q = query {
-            store.stop(q)
-            query = nil
-        }
+        if let q = observerQuery { store.stop(q); observerQuery = nil }
+        pollTimer?.invalidate(); pollTimer = nil
+        store.disableBackgroundDelivery(for: hrType) { _, _ in }
     }
 }

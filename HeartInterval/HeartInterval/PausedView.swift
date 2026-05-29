@@ -8,6 +8,20 @@ struct PausedView: View {
             Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
+
+                // Frozen elapsed time shown at top
+                Text(formattedTime(viewModel.elapsedSeconds))
+                    .font(.system(size: 22, weight: .light, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
+                    .padding(.top, 56)
+
+                Text("PAUSED")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .tracking(2)
+                    .foregroundColor(.orange.opacity(0.8))
+                    .padding(.top, 6)
+
                 Spacer()
 
                 MetricRow(label: "Avg total", value: viewModel.totalAvgHR, unit: "bpm", valueColor: .white)
@@ -16,7 +30,7 @@ struct PausedView: View {
                 MetricRow(label: "Last min", value: viewModel.lastMinuteAvgHR, unit: "bpm", valueColor: .yellow)
                     .padding(.bottom, 24)
 
-                MetricRow(label: "Current", value: viewModel.currentHR, unit: "bpm", valueColor: .white.opacity(0.6))
+                MetricRow(label: "Current", value: viewModel.currentHR, unit: "bpm", valueColor: .white.opacity(0.5))
 
                 Spacer()
 
@@ -42,5 +56,11 @@ struct PausedView: View {
                 .padding(.bottom, 48)
             }
         }
+    }
+
+    private func formattedTime(_ totalSeconds: Int) -> String {
+        let m = totalSeconds / 60
+        let s = totalSeconds % 60
+        return String(format: "%02d:%02d", m, s)
     }
 }

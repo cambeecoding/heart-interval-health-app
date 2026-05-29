@@ -29,6 +29,26 @@ struct StandbyView: View {
 
                 Spacer()
 
+                // Announcement interval toggle — only configurable before starting
+                HStack(spacing: 0) {
+                    Button(action: { viewModel.shortInterval = true }) {
+                        Text("30s")
+                            .font(.subheadline).fontWeight(.medium)
+                            .frame(width: 70, height: 36)
+                            .background(viewModel.shortInterval ? Color.blue : Color.clear)
+                            .foregroundColor(.white)
+                    }
+                    Button(action: { viewModel.shortInterval = false }) {
+                        Text("60s")
+                            .font(.subheadline).fontWeight(.medium)
+                            .frame(width: 70, height: 36)
+                            .background(!viewModel.shortInterval ? Color.blue : Color.clear)
+                            .foregroundColor(.white)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.2), lineWidth: 1))
+
                 Button(action: { viewModel.startExercise() }) {
                     Text("START")
                         .font(.headline)

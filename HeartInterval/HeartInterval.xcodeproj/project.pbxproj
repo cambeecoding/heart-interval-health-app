@@ -17,6 +17,10 @@
 		A008 /* ExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* ExerciseView.swift */; };
 		A009 /* PausedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F009 /* PausedView.swift */; };
 		A010 /* MetricRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* MetricRow.swift */; };
+		A011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F013 /* Assets.xcassets */; };
+		A012 /* StartingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* StartingView.swift */; };
+		A013 /* BLEHeartRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* BLEHeartRateService.swift */; };
+		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,7 +36,12 @@
 		F010 /* MetricRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricRow.swift; sourceTree = "<group>"; };
 		F011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F012 /* HeartInterval.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HeartInterval.entitlements; sourceTree = "<group>"; };
+		F013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F014 /* StartingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartingView.swift; sourceTree = "<group>"; };
+		F015 /* BLEHeartRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEHeartRateService.swift; sourceTree = "<group>"; };
 		PROD /* HeartInterval.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HeartInterval.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
+		TF02 /* HeartIntervalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HeartIntervalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,23 +52,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TBPF /* Frameworks (Tests) */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		GRP_ROOT = {
-			isa = PBXGroup;
-			children = (
-				GRP_SRC /* HeartInterval */,
-				GRP_PROD /* Products */,
-			);
-			sourceTree = "<group>";
-		};
 		GRP_PROD /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				PROD /* HeartInterval.app */,
+				TF02 /* HeartIntervalTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		GRP_ROOT = {
+			isa = PBXGroup;
+			children = (
+				GRP_SRC /* HeartInterval */,
+				TGRP /* HeartIntervalTests */,
+				GRP_PROD /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		TGRP /* HeartIntervalTests */ = {
+			isa = PBXGroup;
+			children = (
+				TF01 /* ExerciseViewModelTests.swift */,
+			);
+			path = HeartIntervalTests;
 			sourceTree = "<group>";
 		};
 		GRP_SRC /* HeartInterval */ = {
@@ -77,6 +103,9 @@
 				F010 /* MetricRow.swift */,
 				F011 /* Info.plist */,
 				F012 /* HeartInterval.entitlements */,
+				F013 /* Assets.xcassets */,
+				F014 /* StartingView.swift */,
+				F015 /* BLEHeartRateService.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -101,6 +130,23 @@
 			productReference = PROD /* HeartInterval.app */;
 			productType = "com.apple.product-type.application";
 		};
+		TTGT /* HeartIntervalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TCFL /* Build configuration list for PBXNativeTarget "HeartIntervalTests" */;
+			buildPhases = (
+				TBPS /* Sources */,
+				TBPF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				TDEP /* PBXTargetDependency */,
+			);
+			name = HeartIntervalTests;
+			productName = HeartIntervalTests;
+			productReference = TF02 /* HeartIntervalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -109,10 +155,14 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					TGT1 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					TTGT = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = TGT1;
 					};
 				};
 			};
@@ -130,6 +180,7 @@
 			projectRoot = "";
 			targets = (
 				TGT1 /* HeartInterval */,
+				TTGT /* HeartIntervalTests */,
 			);
 		};
 /* End PBXProject section */
@@ -139,12 +190,39 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A011 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXContainerItemProxy section */
+		TCIP /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TGT1;
+			remoteInfo = HeartInterval;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		TDEP /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TGT1 /* HeartInterval */;
+			targetProxy = TCIP /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXSourcesBuildPhase section */
+		TBPS /* Sources (Tests) */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				T001 /* ExerciseViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BPS1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -159,6 +237,8 @@
 				A008 /* ExerciseView.swift in Sources */,
 				A009 /* PausedView.swift in Sources */,
 				A010 /* MetricRow.swift in Sources */,
+				A012 /* StartingView.swift in Sources */,
+				A013 /* BLEHeartRateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,8 +279,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -220,6 +302,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -259,8 +342,10 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -272,6 +357,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
@@ -286,7 +372,6 @@
 				CODE_SIGN_ENTITLEMENTS = HeartInterval/HeartInterval.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = HeartInterval/Info.plist;
@@ -296,7 +381,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yourname.HeartInterval";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartInterval;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -312,7 +397,6 @@
 				CODE_SIGN_ENTITLEMENTS = HeartInterval/HeartInterval.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = HeartInterval/Info.plist;
@@ -322,11 +406,47 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.yourname.HeartInterval";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartInterval;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		TDBG /* Debug (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartIntervalTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HeartInterval.app/HeartInterval";
+			};
+			name = Debug;
+		};
+		TREL /* Release (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartIntervalTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HeartInterval.app/HeartInterval";
 			};
 			name = Release;
 		};
@@ -347,6 +467,15 @@
 			buildConfigurations = (
 				CFG_TGT_DBG /* Debug */,
 				CFG_TGT_REL /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		TCFL /* Build configuration list for PBXNativeTarget "HeartIntervalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TDBG /* Debug */,
+				TREL /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
