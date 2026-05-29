@@ -20,6 +20,8 @@
 		A011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F013 /* Assets.xcassets */; };
 		A012 /* StartingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* StartingView.swift */; };
 		A013 /* BLEHeartRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* BLEHeartRateService.swift */; };
+		A014 /* HRRangeSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* HRRangeSlider.swift */; };
+		A015 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* SplashView.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -39,6 +41,8 @@
 		F013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F014 /* StartingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartingView.swift; sourceTree = "<group>"; };
 		F015 /* BLEHeartRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEHeartRateService.swift; sourceTree = "<group>"; };
+		F016 /* HRRangeSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRRangeSlider.swift; sourceTree = "<group>"; };
+		F017 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		PROD /* HeartInterval.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HeartInterval.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
 		TF02 /* HeartIntervalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HeartIntervalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -106,6 +110,8 @@
 				F013 /* Assets.xcassets */,
 				F014 /* StartingView.swift */,
 				F015 /* BLEHeartRateService.swift */,
+				F016 /* HRRangeSlider.swift */,
+				F017 /* SplashView.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -239,6 +245,8 @@
 				A010 /* MetricRow.swift in Sources */,
 				A012 /* StartingView.swift in Sources */,
 				A013 /* BLEHeartRateService.swift in Sources */,
+				A014 /* HRRangeSlider.swift in Sources */,
+				A015 /* SplashView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

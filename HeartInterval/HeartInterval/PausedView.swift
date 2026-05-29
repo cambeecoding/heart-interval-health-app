@@ -24,10 +24,7 @@ struct PausedView: View {
 
                 Spacer()
 
-                MetricRow(label: "Avg total", value: viewModel.totalAvgHR, unit: "bpm", valueColor: .white)
-                    .padding(.bottom, 24)
-
-                MetricRow(label: "Last min", value: viewModel.lastMinuteAvgHR, unit: "bpm", valueColor: .yellow)
+                MetricRow(label: "Session avg", value: viewModel.totalAvgHR, unit: "bpm", valueColor: .yellow)
                     .padding(.bottom, 24)
 
                 MetricRow(label: "Current", value: viewModel.currentHR, unit: "bpm", valueColor: .white.opacity(0.5))

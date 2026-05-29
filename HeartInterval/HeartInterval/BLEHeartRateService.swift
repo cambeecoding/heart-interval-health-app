@@ -16,14 +16,47 @@ final class BLEHeartRateService: NSObject {
     private var central:    CBCentralManager?
     private var peripheral: CBPeripheral?
 
+    var isExercising: Bool = false
+
     var onHR:           ((Double) -> Void)?
     var onStateChange:  ((BLEState) -> Void)?
 
+    /// Start scanning. If central has not been created yet, creates it (which will trigger
+    /// centralManagerDidUpdateState when powered on). If already powered on, starts scanning immediately.
+    func startScanning() {
+        if central == nil {
+            central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
+        } else if central?.state == .poweredOn {
+            onStateChange?(.scanning)
+            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+        }
+    }
+
+    /// Disconnect from current peripheral and return to scanning (standby mode).
+    func returnToScanning() {
+        isExercising = false
+        if let p = peripheral {
+            central?.cancelPeripheralConnection(p)
+        }
+        peripheral = nil
+        onStateChange?(.scanning)
+        if central?.state == .poweredOn {
+            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+        }
+    }
+
     func start() {
-        central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
+        isExercising = true
+        if central == nil {
+            central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
+        } else if central?.state == .poweredOn {
+            onStateChange?(.scanning)
+            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+        }
     }
 
     func stop() {
+        isExercising = false
         if let p = peripheral { central?.cancelPeripheralConnection(p) }
         central?.stopScan()
         peripheral = nil
@@ -60,10 +93,15 @@ extension BLEHeartRateService: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         onStateChange?(.disconnected)
-        // Auto-reconnect
-        if let p = self.peripheral {
-            onStateChange?(.connecting)
-            central.connect(p, options: nil)
+        if isExercising {
+            // Auto-reconnect during exercise
+            if let p = self.peripheral {
+                onStateChange?(.connecting)
+                central.connect(p, options: nil)
+            }
+        } else {
+            // Return to scanning in standby
+            returnToScanning()
         }
     }
 }

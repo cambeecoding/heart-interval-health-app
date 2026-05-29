@@ -59,6 +59,13 @@ final class HealthKitService {
         store.execute(query)
     }
 
+    /// Returns true if the user has already authorized sharing of heart rate data.
+    /// Does not prompt — read-only status check.
+    func isAuthorized() -> Bool {
+        guard HKHealthStore.isHealthDataAvailable() else { return false }
+        return HKHealthStore().authorizationStatus(for: HKObjectType.quantityType(forIdentifier: .heartRate)!) == .sharingAuthorized
+    }
+
     func stopObservingHeartRate() {
         if let q = observerQuery { store.stop(q); observerQuery = nil }
         pollTimer?.invalidate(); pollTimer = nil
