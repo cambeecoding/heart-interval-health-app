@@ -53,9 +53,9 @@
 		F015 /* BLEHeartRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEHeartRateService.swift; sourceTree = "<group>"; };
 		F016 /* HRRangeSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRRangeSlider.swift; sourceTree = "<group>"; };
 		F017 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
-		PROD /* HeartInterval.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HeartInterval.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
-		TF02 /* HeartIntervalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HeartIntervalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		TF02 /* BeatZoneTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BeatZoneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,8 +79,8 @@
 		GRP_PROD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				PROD /* HeartInterval.app */,
-				TF02 /* HeartIntervalTests.xctest */,
+				PROD /* BeatZone.app */,
+				TF02 /* BeatZoneTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,9 +129,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		TGT1 /* HeartInterval */ = {
+		TGT1 /* BeatZone */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CFGLIST_TGT /* Build configuration list for PBXNativeTarget "HeartInterval" */;
+			buildConfigurationList = CFGLIST_TGT /* Build configuration list for PBXNativeTarget "BeatZone" */;
 			buildPhases = (
 				BPS1 /* Sources */,
 				BPF1 /* Frameworks */,
@@ -141,14 +141,14 @@
 			);
 			dependencies = (
 			);
-			name = HeartInterval;
+			name = BeatZone;
 			productName = HeartInterval;
-			productReference = PROD /* HeartInterval.app */;
+			productReference = PROD /* BeatZone.app */;
 			productType = "com.apple.product-type.application";
 		};
-		TTGT /* HeartIntervalTests */ = {
+		TTGT /* BeatZoneTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = TCFL /* Build configuration list for PBXNativeTarget "HeartIntervalTests" */;
+			buildConfigurationList = TCFL /* Build configuration list for PBXNativeTarget "BeatZoneTests" */;
 			buildPhases = (
 				TBPS /* Sources */,
 				TBPF /* Frameworks */,
@@ -158,9 +158,9 @@
 			dependencies = (
 				TDEP /* PBXTargetDependency */,
 			);
-			name = HeartIntervalTests;
+			name = BeatZoneTests;
 			productName = HeartIntervalTests;
-			productReference = TF02 /* HeartIntervalTests.xctest */;
+			productReference = TF02 /* BeatZoneTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -182,7 +182,7 @@
 					};
 				};
 			};
-			buildConfigurationList = CFGLIST_PROJ /* Build configuration list for PBXProject "HeartInterval" */;
+			buildConfigurationList = CFGLIST_PROJ /* Build configuration list for PBXProject "BeatZone" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -195,8 +195,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				TGT1 /* HeartInterval */,
-				TTGT /* HeartIntervalTests */,
+				TGT1 /* BeatZone */,
+				TTGT /* BeatZoneTests */,
 			);
 		};
 /* End PBXProject section */
@@ -247,7 +247,7 @@
 /* Begin PBXTargetDependency section */
 		TDEP /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = TGT1 /* HeartInterval */;
+			target = TGT1 /* BeatZone */;
 			targetProxy = TCIP /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -380,10 +380,12 @@
 				CODE_SIGN_ENTITLEMENTS = HeartInterval/HeartInterval.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = HeartInterval/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -391,6 +393,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -405,10 +411,12 @@
 				CODE_SIGN_ENTITLEMENTS = HeartInterval/HeartInterval.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = HeartInterval/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -416,6 +424,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -426,17 +438,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartIntervalTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.BestZoneTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HeartInterval.app/HeartInterval";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BeatZone.app/BeatZone";
 			};
 			name = Debug;
 		};
@@ -444,24 +457,25 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartIntervalTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.BestZoneTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HeartInterval.app/HeartInterval";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BeatZone.app/BeatZone";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		CFGLIST_PROJ /* Build configuration list for PBXProject "HeartInterval" */ = {
+		CFGLIST_PROJ /* Build configuration list for PBXProject "BeatZone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CFG_PROJ_DBG /* Debug */,
@@ -470,7 +484,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CFGLIST_TGT /* Build configuration list for PBXNativeTarget "HeartInterval" */ = {
+		CFGLIST_TGT /* Build configuration list for PBXNativeTarget "BeatZone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				CFG_TGT_DBG /* Debug */,
@@ -479,7 +493,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		TCFL /* Build configuration list for PBXNativeTarget "HeartIntervalTests" */ = {
+		TCFL /* Build configuration list for PBXNativeTarget "BeatZoneTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				TDBG /* Debug */,

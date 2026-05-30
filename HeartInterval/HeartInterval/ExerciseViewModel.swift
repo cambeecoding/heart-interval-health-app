@@ -53,6 +53,11 @@ final class ExerciseViewModel: ObservableObject {
     // MARK: - Timers
     private var announcementTimer: Timer?
     private var clockTimer: Timer?
+    #if targetEnvironment(simulator)
+    private var mockHRTimer: Timer?
+    private var mockHRIndex = 0
+    private let mockHRValues: [Double] = [142, 145, 148, 144, 147, 143, 146, 149, 141, 145]
+    #endif
 
     // MARK: - Samples
     private var allSamples:    [Double] = []
@@ -266,6 +271,18 @@ final class ExerciseViewModel: ObservableObject {
         RunLoop.main.add(firstFull, forMode: .common)
         announcementTimer = firstFull
 
+        #if targetEnvironment(simulator)
+        let mock = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let bpm = self.mockHRValues[self.mockHRIndex % self.mockHRValues.count]
+                self.mockHRIndex += 1
+                self.handleNewHRSample(bpm, source: .ble)
+            }
+        }
+        RunLoop.main.add(mock, forMode: .common)
+        mockHRTimer = mock
+        #endif
     }
 
     private func startRepeatFullTimer() {
@@ -279,6 +296,9 @@ final class ExerciseViewModel: ObservableObject {
     private func stopTimers() {
         clockTimer?.invalidate();        clockTimer = nil
         announcementTimer?.invalidate(); announcementTimer = nil
+        #if targetEnvironment(simulator)
+        mockHRTimer?.invalidate();       mockHRTimer = nil
+        #endif
     }
 
     /// Fires at the 60 s boundary — announces current HR + total avg, resets window counter.

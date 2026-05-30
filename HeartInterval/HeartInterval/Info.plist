@@ -2,14 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleDisplayName</key>
 	<string>BeatZone</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -19,11 +19,11 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Heart Interval connects to your Garmin or other Bluetooth heart rate monitor to read live heart rate during exercise.</string>
+	<string>BeatZone connects to your Garmin or other Bluetooth (BLE) heart rate monitor to read live heart rate during exercise.</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
-	<string>monitors heart rate to display during exercise</string>
+	<string>BeatZone connects to Apple Health to monitor and read live heart rate during exercise. No Health Information is separately stored and it does not write to Apple Health.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Heart Interval reads your heart rate from Apple Health to track exercise metrics.</string>
+	<string>BeatZone reads your heart rate from Apple Health to track exercise metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>Heart Interval does not write health data.</string>
 	<key>UIBackgroundModes</key>
@@ -31,14 +31,16 @@
 		<string>audio</string>
 		<string>bluetooth-central</string>
 	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
 	</dict>
+	<key>UIStatusBarStyle</key>
+	<string></string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>
