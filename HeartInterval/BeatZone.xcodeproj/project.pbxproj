@@ -25,6 +25,16 @@
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		TCIP /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TGT1;
+			remoteInfo = HeartInterval;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		F001 /* HeartIntervalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartIntervalApp.swift; sourceTree = "<group>"; };
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -56,7 +66,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		TBPF /* Frameworks (Tests) */ = {
+		TBPF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -84,14 +94,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		TGRP /* HeartIntervalTests */ = {
-			isa = PBXGroup;
-			children = (
-				TF01 /* ExerciseViewModelTests.swift */,
-			);
-			path = HeartIntervalTests;
-			sourceTree = "<group>";
-		};
 		GRP_SRC /* HeartInterval */ = {
 			isa = PBXGroup;
 			children = (
@@ -114,6 +116,14 @@
 				F017 /* SplashView.swift */,
 			);
 			path = HeartInterval;
+			sourceTree = "<group>";
+		};
+		TGRP /* HeartIntervalTests */ = {
+			isa = PBXGroup;
+			children = (
+				TF01 /* ExerciseViewModelTests.swift */,
+			);
+			path = HeartIntervalTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -202,33 +212,7 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXContainerItemProxy section */
-		TCIP /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = PROJ /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = TGT1;
-			remoteInfo = HeartInterval;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXTargetDependency section */
-		TDEP /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = TGT1 /* HeartInterval */;
-			targetProxy = TCIP /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin PBXSourcesBuildPhase section */
-		TBPS /* Sources (Tests) */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				T001 /* ExerciseViewModelTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		BPS1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -250,7 +234,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TBPS /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				T001 /* ExerciseViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		TDEP /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TGT1 /* HeartInterval */;
+			targetProxy = TCIP /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		CFG_PROJ_DBG /* Debug */ = {
@@ -389,7 +389,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartInterval;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -414,7 +414,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.HeartInterval;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -422,7 +422,7 @@
 			};
 			name = Release;
 		};
-		TDBG /* Debug (Tests) */ = {
+		TDBG /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -440,7 +440,7 @@
 			};
 			name = Debug;
 		};
-		TREL /* Release (Tests) */ = {
+		TREL /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
