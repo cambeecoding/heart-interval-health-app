@@ -23,15 +23,11 @@ final class ExerciseViewModel: ObservableObject {
     @Published var currentHR: Int?           = nil
     @Published var totalAvgHR: Int?          = nil
     @Published var elapsedSeconds: Int       = 0
-    @Published var secondsInWindow: Int      = 0
     @Published var secondsSinceLastHR: Int?  = nil
     @Published var hrSource: HRSource        = .none
     @Published var bleStatus: String         = ""
-    /// When true: announce current HR every 30 s + total avg every 60 s.
-    /// When false: announce current HR + total avg every 60 s.
-    @Published var shortInterval: Bool       = true
 
-    // MARK: - UserDefaults-backed HR range (triggers objectWillChange for SwiftUI)
+    // MARK: - UserDefaults-backed HR range
     var minHR: Int {
         get { UserDefaults.standard.object(forKey: "minHR") as? Int ?? 120 }
         set { UserDefaults.standard.set(newValue, forKey: "minHR"); objectWillChange.send() }
@@ -41,8 +37,26 @@ final class ExerciseViewModel: ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: "maxHR"); objectWillChange.send() }
     }
 
-    /// The interval driving the ring/counter — always 30s in short mode so ring reflects next announcement.
-    var announcementInterval: Int { shortInterval ? 30 : 60 }
+    // MARK: - UserDefaults-backed announcement settings
+    /// Seconds between current BPM announcements. 0 = off.
+    /// Valid values: 0, 30, 60, 120, 180.
+    var speakInterval: Int {
+        get { UserDefaults.standard.object(forKey: "speakInterval") as? Int ?? 60 }
+        set { UserDefaults.standard.set(newValue, forKey: "speakInterval"); objectWillChange.send() }
+    }
+    /// Seconds between summary (current + average) announcements. 0 = off.
+    /// Valid values: 0, 120, 180, 300, 600.
+    var summaryInterval: Int {
+        get { UserDefaults.standard.object(forKey: "summaryInterval") as? Int ?? 300 }
+        set { UserDefaults.standard.set(newValue, forKey: "summaryInterval"); objectWillChange.send() }
+    }
+
+    /// Drives the progress ring — uses the speak interval if active, otherwise summary, otherwise 60s fallback.
+    var announcementInterval: Int {
+        if speakInterval > 0 { return speakInterval }
+        if summaryInterval > 0 { return summaryInterval }
+        return 60
+    }
 
     // MARK: - Services
     private let bleService       = BLEHeartRateService()
@@ -51,8 +65,9 @@ final class ExerciseViewModel: ObservableObject {
     private let workoutManager   = WorkoutManager()
 
     // MARK: - Timers
-    private var announcementTimer: Timer?
-    private var clockTimer: Timer?
+    private var clockTimer:   Timer?
+    private var speakTimer:   Timer?
+    private var summaryTimer: Timer?
     #if targetEnvironment(simulator)
     private var mockHRTimer: Timer?
     private var mockHRIndex = 0
@@ -115,19 +130,15 @@ final class ExerciseViewModel: ObservableObject {
     // MARK: - Computed HR source status
 
     var hrSourceStatus: (message: String, isReady: Bool) {
-        // BLE connected takes priority
         if hrSource == .ble || bleStatus == "HR monitor connected" {
             return ("Heart rate monitor connected", true)
         }
-        // BLE scanning/connecting
         if !bleStatus.isEmpty && bleStatus != "HR monitor disconnected — reconnecting…" {
-            // Check if HealthKit is authorized as fallback
             if healthKitService.isAuthorized() {
                 return ("Using Apple Watch via Health", true)
             }
             return (bleStatus, false)
         }
-        // BLE disconnected
         if healthKitService.isAuthorized() {
             return ("Using Apple Watch via Health", true)
         }
@@ -141,7 +152,6 @@ final class ExerciseViewModel: ObservableObject {
         currentHR          = nil
         totalAvgHR         = nil
         elapsedSeconds     = 0
-        secondsInWindow    = 0
         secondsSinceLastHR = nil
         lastSampleDate     = nil
         hrSource           = .none
@@ -150,8 +160,6 @@ final class ExerciseViewModel: ObservableObject {
         workoutManager.beginExercise()
         audioService.startSilentLoop()
 
-        // BLE is already scanning from init; just mark as exercising so
-        // disconnect handler auto-reconnects instead of returning to scan
         bleService.isExercising = true
 
         Task { @MainActor in
@@ -190,7 +198,6 @@ final class ExerciseViewModel: ObservableObject {
 
     func endExercise() {
         stopTimers()
-        // Return to scanning so standby shows live BLE status
         bleService.returnToScanning()
         healthKitService.stopObservingHeartRate()
         workoutManager.endExercise()
@@ -199,7 +206,6 @@ final class ExerciseViewModel: ObservableObject {
         currentHR          = nil
         totalAvgHR         = nil
         elapsedSeconds     = 0
-        secondsInWindow    = 0
         secondsSinceLastHR = nil
         hrSource           = .none
         isAboveMax         = false
@@ -244,32 +250,19 @@ final class ExerciseViewModel: ObservableObject {
     private func startTimers() {
         stopTimers()
 
-        // Clock: fires every second; also handles the 30s halfway announcement
+        // Clock: fires every second to drive elapsed time and secondsSinceLastHR
         let clock = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.elapsedSeconds  += 1
-                self.secondsInWindow += 1
+                self.elapsedSeconds += 1
                 if self.secondsSinceLastHR != nil { self.secondsSinceLastHR! += 1 }
-                // In 30s mode, announce current HR at the midpoint of each 60s window
-                if self.shortInterval && self.secondsInWindow == 30 {
-                    self.onHalfwayTick()
-                }
             }
         }
         RunLoop.main.add(clock, forMode: .common)
         clockTimer = clock
 
-        // Main 60 s announcement timer
-        let remainingFull = max(1, 60 - secondsInWindow)
-        let firstFull = Timer(timeInterval: TimeInterval(remainingFull), repeats: false) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.onFullMinuteTick()
-                self?.startRepeatFullTimer()
-            }
-        }
-        RunLoop.main.add(firstFull, forMode: .common)
-        announcementTimer = firstFull
+        startSpeakTimer()
+        startSummaryTimer()
 
         #if targetEnvironment(simulator)
         let mock = Timer(timeInterval: 3, repeats: true) { [weak self] _ in
@@ -285,33 +278,47 @@ final class ExerciseViewModel: ObservableObject {
         #endif
     }
 
-    private func startRepeatFullTimer() {
-        let t = Timer(timeInterval: 60, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.onFullMinuteTick() }
+    private func startSpeakTimer() {
+        guard speakInterval > 0 else { return }
+        let t = Timer(timeInterval: TimeInterval(speakInterval), repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.onSpeakTick() }
         }
         RunLoop.main.add(t, forMode: .common)
-        announcementTimer = t
+        speakTimer = t
+    }
+
+    private func startSummaryTimer() {
+        guard summaryInterval > 0 else { return }
+        let t = Timer(timeInterval: TimeInterval(summaryInterval), repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.onSummaryTick() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        summaryTimer = t
     }
 
     private func stopTimers() {
-        clockTimer?.invalidate();        clockTimer = nil
-        announcementTimer?.invalidate(); announcementTimer = nil
+        clockTimer?.invalidate();   clockTimer = nil
+        speakTimer?.invalidate();   speakTimer = nil
+        summaryTimer?.invalidate(); summaryTimer = nil
         #if targetEnvironment(simulator)
-        mockHRTimer?.invalidate();       mockHRTimer = nil
+        mockHRTimer?.invalidate();  mockHRTimer = nil
         #endif
     }
 
-    /// Fires at the 60 s boundary — announces current HR + total avg, resets window counter.
-    func onFullMinuteTick() {
-        secondsInWindow = 0
-        announceMetrics(includeTotal: true)
-    }
-
-    /// Fires at the 30 s midpoint in short mode — current HR only, no window reset.
-    func onHalfwayTick() {
-        guard shortInterval else { return }
+    /// Fires on the speak interval — announces current BPM only.
+    func onSpeakTick() {
         if let current = currentHR {
             audioService.speak("Current \(current) B.P.M.")
+        }
+    }
+
+    /// Fires on the summary interval — announces current BPM + session average,
+    /// then resets the speak timer to avoid a back-to-back announcement.
+    func onSummaryTick() {
+        announceMetrics(includeTotal: true)
+        if speakInterval > 0 {
+            speakTimer?.invalidate()
+            startSpeakTimer()
         }
     }
 

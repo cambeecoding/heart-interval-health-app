@@ -25,7 +25,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>BeatZone reads your heart rate from Apple Health to track exercise metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Heart Interval does not write health data.</string>
+	<string>BeatZone does not write health data.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

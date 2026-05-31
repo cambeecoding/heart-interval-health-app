@@ -11,6 +11,7 @@ struct HRRangeSlider: View {
 
     private let labelW: CGFloat  = 52
     private let handleD: CGFloat = 28
+    private let step: Int        = 5
     private var pad: CGFloat     { labelW / 2 }
     private var span: CGFloat    { CGFloat(range.upperBound - range.lowerBound) }
 
@@ -20,7 +21,8 @@ struct HRRangeSlider: View {
 
     private func bpm(from fraction: CGFloat) -> Int {
         let clamped = min(max(fraction, 0), 1)
-        return range.lowerBound + Int((clamped * span).rounded())
+        let raw = range.lowerBound + Int((clamped * span).rounded())
+        return Int((Double(raw) / Double(step)).rounded()) * step
     }
 
     private func xPos(for value: Int, trackW: CGFloat) -> CGFloat {
@@ -74,7 +76,7 @@ struct HRRangeSlider: View {
                                 }
                                 let startX = xPos(for: lowStart, trackW: trackW)
                                 let proposed = bpmAt(x: startX + v.translation.width, trackW: trackW)
-                                low = min(max(proposed, range.lowerBound), high - 1)
+                                low = min(max(proposed, range.lowerBound), high - step)
                             }
                     )
 
@@ -92,7 +94,7 @@ struct HRRangeSlider: View {
                                 }
                                 let startX = xPos(for: highStart, trackW: trackW)
                                 let proposed = bpmAt(x: startX + v.translation.width, trackW: trackW)
-                                high = min(max(proposed, low + 1), range.upperBound)
+                                high = min(max(proposed, low + step), range.upperBound)
                             }
                     )
 
