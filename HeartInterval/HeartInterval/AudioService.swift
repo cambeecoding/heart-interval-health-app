@@ -1,6 +1,7 @@
 import AVFoundation
 
 /// Abstraction over audio output so the ViewModel can be tested with a spy.
+@MainActor
 protocol AudioServiceProtocol {
     func speak(_ text: String)
     func startSilentLoop()
@@ -8,6 +9,7 @@ protocol AudioServiceProtocol {
     func reactivateSession()
 }
 
+@MainActor
 final class AudioService: NSObject, AudioServiceProtocol {
 
     private let synthesizer = AVSpeechSynthesizer()
@@ -99,6 +101,7 @@ final class AudioService: NSObject, AudioServiceProtocol {
 
 // MARK: - AVSpeechSynthesizerDelegate
 
+@MainActor
 extension AudioService: AVSpeechSynthesizerDelegate {
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

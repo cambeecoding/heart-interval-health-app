@@ -84,8 +84,8 @@ final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(audioService: AudioServiceProtocol = AudioService()) {
-        self.audioService = audioService
+    init(audioService: AudioServiceProtocol? = nil) {
+        self.audioService = audioService ?? AudioService()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),

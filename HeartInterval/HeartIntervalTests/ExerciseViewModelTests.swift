@@ -3,6 +3,7 @@ import XCTest
 
 // MARK: - Spy
 
+@MainActor
 final class SpyAudioService: AudioServiceProtocol {
     var spoken: [String] = []
     func speak(_ text: String)   { spoken.append(text) }
