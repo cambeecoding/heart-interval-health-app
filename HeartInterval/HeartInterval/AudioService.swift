@@ -8,15 +8,39 @@ protocol AudioServiceProtocol {
     func reactivateSession()
 }
 
-final class AudioService: AudioServiceProtocol {
+final class AudioService: NSObject, AudioServiceProtocol {
 
     private let synthesizer = AVSpeechSynthesizer()
     private var silentPlayer: AVAudioPlayer?
+
+    /// Tracks how many utterances are active or pending.
+    /// Incremented before each speak; decremented in didFinish.
+    /// Only releases ducking when it reaches zero.
+    private var activeSpeechCount = 0
+
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
 
     func reactivateSession() {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, options: [.mixWithOthers, .duckOthers])
         try? session.setActive(true, options: .notifyOthersOnDeactivation)
+        #if targetEnvironment(simulator)
+        print("[BeatZone Audio] Session activated — ducking other audio")
+        #endif
+    }
+
+    /// Drops .duckOthers so other audio (music, podcasts) resumes at full volume,
+    /// while keeping the session active for background speech.
+    private func releaseDucking() {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, options: [.mixWithOthers])
+        try? session.setActive(true, options: .notifyOthersOnDeactivation)
+        #if targetEnvironment(simulator)
+        print("[BeatZone Audio] Ducking released — other audio restored")
+        #endif
     }
 
     /// Starts looping a silent audio buffer so iOS keeps the audio session
@@ -55,15 +79,40 @@ final class AudioService: AudioServiceProtocol {
     }
 
     func speak(_ text: String) {
+        // Increment BEFORE stopping any current utterance so that when
+        // didFinish fires for the interrupted utterance, activeSpeechCount
+        // is still ≥ 1 and ducking is not released prematurely.
+        activeSpeechCount += 1
         reactivateSession()
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate   = AVSpeechUtteranceDefaultSpeechRate
         utterance.volume = 1.0
-        let localeTag = Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
-        utterance.voice = AVSpeechSynthesisVoice(language: localeTag)
+        utterance.voice = AVSpeechSynthesisVoice(identifier: "com.apple.voice.enhanced.en-GB.Serena")
+                       ?? AVSpeechSynthesisVoice(identifier: "com.apple.ttsbundle.siri_Nicky_en-US_premium")
+                       ?? AVSpeechSynthesisVoice(language: Locale.current.identifier.replacingOccurrences(of: "_", with: "-"))
                        ?? AVSpeechSynthesisVoice(language: "en-US")
         synthesizer.speak(utterance)
+    }
+}
+
+// MARK: - AVSpeechSynthesizerDelegate
+
+extension AudioService: AVSpeechSynthesizerDelegate {
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        activeSpeechCount = max(0, activeSpeechCount - 1)
+        if activeSpeechCount == 0 {
+            releaseDucking()
+        }
+    }
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        // Treat a cancelled utterance the same as finished so the count stays accurate.
+        activeSpeechCount = max(0, activeSpeechCount - 1)
+        if activeSpeechCount == 0 {
+            releaseDucking()
+        }
     }
 }

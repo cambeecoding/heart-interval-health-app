@@ -3,6 +3,13 @@ import SwiftUI
 struct StandbyView: View {
     @ObservedObject var viewModel: ExerciseViewModel
 
+    private let speakOptions:   [(label: String, value: Int)] = [
+        ("Off", 0), ("30s", 30), ("1 min", 60), ("2 min", 120), ("3 min", 180)
+    ]
+    private let summaryOptions: [(label: String, value: Int)] = [
+        ("Off", 0), ("2 min", 120), ("3 min", 180), ("5 min", 300), ("10 min", 600)
+    ]
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -15,7 +22,6 @@ struct StandbyView: View {
                     .fontWeight(.light)
                     .foregroundColor(.white.opacity(0.6))
 
-                // HR source status label
                 let status = viewModel.hrSourceStatus
                 if !status.message.isEmpty {
                     Text(status.message)
@@ -24,32 +30,26 @@ struct StandbyView: View {
                         .padding(.top, 6)
                 }
 
-                Spacer()
-                    .frame(height: 32)
+                Spacer().frame(height: 32)
 
-                // Announcement interval toggle — only configurable before starting
-                HStack(spacing: 0) {
-                    Button(action: { viewModel.shortInterval = true }) {
-                        Text("30s")
-                            .font(.subheadline).fontWeight(.medium)
-                            .frame(width: 70, height: 36)
-                            .background(viewModel.shortInterval ? Color.blue : Color.clear)
-                            .foregroundColor(.white)
-                    }
-                    Button(action: { viewModel.shortInterval = false }) {
-                        Text("60s")
-                            .font(.subheadline).fontWeight(.medium)
-                            .frame(width: 70, height: 36)
-                            .background(!viewModel.shortInterval ? Color.blue : Color.clear)
-                            .foregroundColor(.white)
-                    }
+                // ── Announcement settings ─────────────────────────────────
+                VStack(spacing: 14) {
+                    AnnouncementPickerRow(
+                        label: "Speak every",
+                        options: speakOptions,
+                        selected: $viewModel.speakInterval
+                    )
+                    AnnouncementPickerRow(
+                        label: "Summary every",
+                        options: summaryOptions,
+                        selected: $viewModel.summaryInterval
+                    )
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.2), lineWidth: 1))
+                .padding(.horizontal, 16)
                 .padding(.bottom, 24)
 
-                // Dual-handle HR range slider
-                HRRangeSlider(range: 60...200, low: $viewModel.minHR, high: $viewModel.maxHR)
+                // ── HR zone slider ────────────────────────────────────────
+                HRRangeSlider(range: 80...180, low: $viewModel.minHR, high: $viewModel.maxHR)
                     .padding(.bottom, 28)
 
                 Button(action: { viewModel.startExercise() }) {
@@ -62,6 +62,37 @@ struct StandbyView: View {
                 }
 
                 Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Picker row
+
+private struct AnnouncementPickerRow: View {
+    let label: String
+    let options: [(label: String, value: Int)]
+    @Binding var selected: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.45))
+
+            HStack(spacing: 6) {
+                ForEach(options, id: \.value) { option in
+                    Button(action: { selected = option.value }) {
+                        Text(option.label)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .background(selected == option.value ? Color.blue : Color.white.opacity(0.08))
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
             }
         }
     }

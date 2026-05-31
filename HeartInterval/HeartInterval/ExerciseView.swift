@@ -18,17 +18,17 @@ struct ExerciseView: View {
                             .frame(width: 84, height: 84)
 
                         Circle()
-                            .trim(from: 0, to: CGFloat(viewModel.secondsInWindow % viewModel.announcementInterval) / CGFloat(viewModel.announcementInterval))
+                            .trim(from: 0, to: CGFloat(viewModel.elapsedSeconds % viewModel.announcementInterval) / CGFloat(viewModel.announcementInterval))
                             .stroke(Color.blue, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                             .frame(width: 84, height: 84)
                             .rotationEffect(.degrees(-90))
-                            .animation(.linear(duration: 1), value: viewModel.secondsInWindow)
+                            .animation(.linear(duration: 1), value: viewModel.elapsedSeconds)
 
                         VStack(spacing: 1) {
                             Text(formattedTime(viewModel.elapsedSeconds))
                                 .font(.system(size: 22, weight: .light, design: .monospaced))
                                 .foregroundColor(.white)
-                            Text("next \(max(0, viewModel.announcementInterval - (viewModel.secondsInWindow % viewModel.announcementInterval)))s")
+                            Text("next \(max(0, viewModel.announcementInterval - (viewModel.elapsedSeconds % viewModel.announcementInterval)))s")
                                 .font(.system(size: 9))
                                 .foregroundColor(.white.opacity(0.4))
                         }
