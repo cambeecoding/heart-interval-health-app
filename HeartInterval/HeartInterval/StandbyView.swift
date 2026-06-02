@@ -22,13 +22,26 @@ struct StandbyView: View {
                     .fontWeight(.light)
                     .foregroundColor(.white.opacity(0.6))
 
-                let status = viewModel.hrSourceStatus
-                if !status.message.isEmpty {
-                    Text(status.message)
-                        .font(.footnote)
-                        .foregroundColor(status.isReady ? .green.opacity(0.8) : .orange.opacity(0.7))
-                        .padding(.top, 6)
+                let ble   = viewModel.bleSourceStatus
+                let watch = viewModel.watchSourceStatus
+
+                VStack(spacing: 4) {
+                    if !ble.message.isEmpty {
+                        StatusRow(message: ble.message, isReady: ble.isReady)
+                    }
+                    if !watch.message.isEmpty {
+                        StatusRow(message: watch.message, isReady: watch.isReady)
+                    }
+                    if viewModel.shouldShowSourceInstruction {
+                        Text("Start a workout on your Apple Watch or Garmin,\nor put your HR monitor in broadcast mode")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.35))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 2)
+                    }
                 }
+                .padding(.top, 6)
 
                 Spacer().frame(height: 32)
 
@@ -64,6 +77,18 @@ struct StandbyView: View {
                 Spacer()
             }
         }
+    }
+}
+
+// MARK: - Status row
+
+private struct StatusRow: View {
+    let message: String
+    let isReady: Bool
+    var body: some View {
+        Text(message)
+            .font(.footnote)
+            .foregroundColor(isReady ? .green.opacity(0.8) : .orange.opacity(0.7))
     }
 }
 

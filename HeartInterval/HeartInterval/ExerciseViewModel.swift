@@ -26,6 +26,9 @@ final class ExerciseViewModel: ObservableObject {
     @Published var secondsSinceLastHR: Int?  = nil
     @Published var hrSource: HRSource        = .none
     @Published var bleStatus: String         = ""
+    /// Latest HR sample seen from HealthKit while on the standby screen.
+    /// nil = no recent sample (Watch/device not currently streaming).
+    @Published var standbyWatchBPM: Double?  = nil
 
     // MARK: - UserDefaults-backed HR range
     var minHR: Int {
@@ -60,14 +63,16 @@ final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Services
     private let bleService       = BLEHeartRateService()
-    let healthKitService         = HealthKitService()
+    let healthKitService: HealthKitServicing
     let audioService: AudioServiceProtocol
     private let workoutManager   = WorkoutManager()
+    private let standbyPollInterval: TimeInterval
 
     // MARK: - Timers
     private var clockTimer:   Timer?
     private var speakTimer:   Timer?
     private var summaryTimer: Timer?
+    private var standbyPollTimer: Timer?
     #if targetEnvironment(simulator)
     private var mockHRTimer: Timer?
     private var mockHRIndex = 0
@@ -84,8 +89,12 @@ final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(audioService: AudioServiceProtocol? = nil) {
+    init(audioService: AudioServiceProtocol? = nil,
+         healthKitService: HealthKitServicing? = nil,
+         standbyPollInterval: TimeInterval = 5) {
         self.audioService = audioService ?? AudioService()
+        self.healthKitService = healthKitService ?? HealthKitService()
+        self.standbyPollInterval = standbyPollInterval
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -117,7 +126,10 @@ final class ExerciseViewModel: ObservableObject {
         // Give BLE + HealthKit a moment to initialise before showing standby
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 1_500_000_000)
-            if appState == .launching { appState = .standby }
+            if appState == .launching {
+                appState = .standby
+                startStandbyPoll()
+            }
         }
     }
 
@@ -129,20 +141,33 @@ final class ExerciseViewModel: ObservableObject {
 
     // MARK: - Computed HR source status
 
-    var hrSourceStatus: (message: String, isReady: Bool) {
+    /// BLE-specific status row for standby screen. Empty message = row hidden.
+    var bleSourceStatus: (message: String, isReady: Bool) {
         if hrSource == .ble || bleStatus == "HR monitor connected" {
-            return ("Heart rate monitor connected", true)
+            return ("Bluetooth HR monitor connected", true)
         }
-        if !bleStatus.isEmpty && bleStatus != "HR monitor disconnected — reconnecting…" {
-            if healthKitService.isAuthorized() {
-                return ("Using Apple Watch via Health", true)
-            }
-            return (bleStatus, false)
+        if bleStatus == "Connecting…" {
+            return ("Connecting to HR monitor…", false)
         }
-        if healthKitService.isAuthorized() {
-            return ("Using Apple Watch via Health", true)
+        if bleStatus == "Scanning for HR monitor…" {
+            return ("Scanning for Bluetooth HR monitor…", false)
         }
-        return ("No heart rate source detected", false)
+        return ("", false)
+    }
+
+    /// Apple Watch / HealthKit status row for standby screen. Empty message = row hidden.
+    /// Detects liveness via `standbyWatchBPM` rather than relying on stale authorization.
+    var watchSourceStatus: (message: String, isReady: Bool) {
+        guard healthKitService.isAuthorized() else { return ("", false) }
+        if let bpm = standbyWatchBPM {
+            return ("Apple Watch streaming — \(Int(bpm.rounded())) bpm", true)
+        }
+        return ("Apple Watch paired — start a workout on your Watch", false)
+    }
+
+    /// True when no HR source is actively streaming — show the universal instruction.
+    var shouldShowSourceInstruction: Bool {
+        !bleSourceStatus.isReady && !watchSourceStatus.isReady
     }
 
     // MARK: - Actions
@@ -156,6 +181,7 @@ final class ExerciseViewModel: ObservableObject {
         lastSampleDate     = nil
         hrSource           = .none
 
+        stopStandbyPoll()
         appState = .starting
         workoutManager.beginExercise()
         audioService.startSilentLoop()
@@ -169,13 +195,14 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func requestHealthKitAndBegin() {
+        let since = Date()   // anchor: reject any sample written before exercise began
         healthKitService.requestAuthorization { [weak self] granted in
             guard let self else { return }
             self.appState = .exercising
             self.audioService.speak("Starting exercise.")
             self.startTimers()
             if granted {
-                self.healthKitService.startObservingHeartRate { [weak self] bpm, date in
+                self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
                     Task { @MainActor [weak self] in
                         guard let self, self.hrSource != .ble else { return }
                         self.handleNewHRSample(bpm, source: .healthKit, date: date)
@@ -210,6 +237,33 @@ final class ExerciseViewModel: ObservableObject {
         hrSource           = .none
         isAboveMax         = false
         isBelowMin         = false
+        startStandbyPoll()
+    }
+
+    // MARK: - Standby liveness poll
+
+    private func startStandbyPoll() {
+        standbyPollTimer?.invalidate()
+        let t = Timer(timeInterval: standbyPollInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.pollStandbyHR() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        standbyPollTimer = t
+        // Immediate first check so the UI doesn't wait 5s on entry.
+        pollStandbyHR()
+    }
+
+    /// Internal for testability — drives one poll cycle.
+    func pollStandbyHR() {
+        healthKitService.fetchRecentSample(within: 60) { [weak self] bpm in
+            Task { @MainActor [weak self] in self?.standbyWatchBPM = bpm }
+        }
+    }
+
+    private func stopStandbyPoll() {
+        standbyPollTimer?.invalidate()
+        standbyPollTimer = nil
+        standbyWatchBPM = nil
     }
 
     // MARK: - Private helpers
