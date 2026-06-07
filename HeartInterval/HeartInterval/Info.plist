@@ -25,7 +25,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>BeatZone reads your heart rate from Apple Health to track exercise metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>BeatZone does not write health data.</string>
+	<string>BeatZone saves your workout and heart rate samples to Apple Health so you can track your training over time.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

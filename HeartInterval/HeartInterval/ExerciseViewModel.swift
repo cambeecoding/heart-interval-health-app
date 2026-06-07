@@ -1,12 +1,13 @@
 import Foundation
 import UIKit
 
-enum AppState {
+enum AppState: Equatable {
     case launching  // initial splash while app and BLE initialise
     case standby
     case starting
     case exercising
     case paused
+    case summary(SessionSummary)
 }
 
 enum HRSource {
@@ -29,6 +30,18 @@ final class ExerciseViewModel: ObservableObject {
     /// Latest HR sample seen from HealthKit while on the standby screen.
     /// nil = no recent sample (Watch/device not currently streaming).
     @Published var standbyWatchBPM: Double?  = nil
+
+    // MARK: - UserDefaults-backed workout type
+    var selectedActivityType: WorkoutActivityType {
+        get {
+            let raw = UserDefaults.standard.string(forKey: "workoutActivityType") ?? "other"
+            return WorkoutActivityType(rawValue: raw) ?? .other
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: "workoutActivityType")
+            objectWillChange.send()
+        }
+    }
 
     // MARK: - UserDefaults-backed HR range
     var minHR: Int {
@@ -79,9 +92,14 @@ final class ExerciseViewModel: ObservableObject {
     private let mockHRValues: [Double] = [142, 145, 148, 144, 147, 143, 146, 149, 141, 145]
     #endif
 
+    // MARK: - Summary state
+    @Published var isSaving     = false
+    @Published var summaryError: String? = nil
+
     // MARK: - Samples
-    private var allSamples:    [Double] = []
-    private var lastSampleDate: Date?
+    private var allSamples:        [HRSample] = []
+    private var lastSampleDate:    Date?
+    private var exerciseStartDate: Date       = Date()
 
     // MARK: - Zone breach tracking
     private var isAboveMax = false
@@ -160,13 +178,12 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     /// Apple Watch / HealthKit status row for standby screen. Empty message = row hidden.
-    /// Detects liveness via `standbyWatchBPM` rather than relying on stale authorization.
+    /// Purely data-driven: if we see recent HR from HealthKit, the Watch is streaming.
     var watchSourceStatus: (message: String, isReady: Bool) {
-        guard healthKitService.isAuthorized() else { return ("", false) }
         if let bpm = standbyWatchBPM {
             return ("Apple Watch streaming — \(Int(bpm.rounded())) bpm", true)
         }
-        return ("Apple Watch paired — start a workout on your Watch", false)
+        return ("", false)
     }
 
     /// True when no HR source is actively streaming — show the universal instruction.
@@ -177,6 +194,7 @@ final class ExerciseViewModel: ObservableObject {
     // MARK: - Actions
 
     func startExercise() {
+        exerciseStartDate  = Date()
         allSamples         = []
         currentHR          = nil
         totalAvgHR         = nil
@@ -200,17 +218,15 @@ final class ExerciseViewModel: ObservableObject {
 
     private func requestHealthKitAndBegin() {
         let since = Date()   // anchor: reject any sample written before exercise began
-        healthKitService.requestAuthorization { [weak self] granted in
+        healthKitService.requestAuthorization { [weak self] _ in
             guard let self else { return }
             self.appState = .exercising
             self.audioService.speak("Starting exercise.")
             self.startTimers()
-            if granted {
-                self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
-                    Task { @MainActor [weak self] in
-                        guard let self, self.hrSource != .ble else { return }
-                        self.handleNewHRSample(bpm, source: .healthKit, date: date)
-                    }
+            self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
+                Task { @MainActor [weak self] in
+                    guard let self, self.hrSource != .ble else { return }
+                    self.handleNewHRSample(bpm, source: .healthKit, date: date)
                 }
             }
         }
@@ -233,7 +249,20 @@ final class ExerciseViewModel: ObservableObject {
         healthKitService.stopObservingHeartRate()
         workoutManager.endExercise()
         audioService.stopSilentLoop()
-        appState           = .standby
+
+        let summary = SessionSummary(
+            startDate: exerciseStartDate,
+            endDate: Date(),
+            durationSeconds: elapsedSeconds,
+            samples: allSamples,
+            minHR: minHR,
+            maxHR: maxHR,
+            activityType: selectedActivityType
+        )
+        appState = .summary(summary)
+    }
+
+    func dismissSummary() {
         currentHR          = nil
         totalAvgHR         = nil
         elapsedSeconds     = 0
@@ -241,7 +270,26 @@ final class ExerciseViewModel: ObservableObject {
         hrSource           = .none
         isAboveMax         = false
         isBelowMin         = false
+        isSaving           = false
+        summaryError       = nil
+        allSamples         = []
+        appState           = .standby
         startStandbyPoll()
+    }
+
+    func saveAndDismiss(summary: SessionSummary) {
+        isSaving     = true
+        summaryError = nil
+        healthKitService.saveWorkout(summary) { [weak self] result in
+            guard let self else { return }
+            self.isSaving = false
+            switch result {
+            case .success:
+                self.dismissSummary()
+            case .failure(let error):
+                self.summaryError = error.localizedDescription
+            }
+        }
     }
 
     // MARK: - Standby liveness poll
@@ -279,9 +327,9 @@ final class ExerciseViewModel: ObservableObject {
         }
         hrSource           = source
         secondsSinceLastHR = 0
-        allSamples.append(bpm)
+        allSamples.append(HRSample(bpm: bpm, date: date))
         currentHR  = Int(bpm.rounded())
-        totalAvgHR = average(of: allSamples)
+        totalAvgHR = average(of: allSamples.map(\.bpm))
         checkZoneBreaches()
     }
 

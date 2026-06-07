@@ -5,8 +5,14 @@ protocol HealthKitServicing: AnyObject {
     func requestAuthorization(completion: @escaping (Bool) -> Void)
     func startObservingHeartRate(since: Date, handler: @escaping (Double, Date) -> Void)
     func fetchRecentSample(within seconds: TimeInterval, completion: @escaping (Double?) -> Void)
-    func isAuthorized() -> Bool
     func stopObservingHeartRate()
+    func saveWorkout(_ summary: SessionSummary, completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+extension HealthKitServicing {
+    func saveWorkout(_ summary: SessionSummary, completion: @escaping (Result<Void, Error>) -> Void) {
+        completion(.success(()))
+    }
 }
 
 final class HealthKitService: HealthKitServicing {
@@ -22,7 +28,11 @@ final class HealthKitService: HealthKitServicing {
             completion(false)
             return
         }
-        store.requestAuthorization(toShare: [], read: [hrType]) { granted, _ in
+        let writeTypes: Set<HKSampleType> = [
+            HKObjectType.workoutType(),
+            HKQuantityType(.heartRate)
+        ]
+        store.requestAuthorization(toShare: writeTypes, read: [hrType]) { granted, _ in
             DispatchQueue.main.async { completion(granted) }
         }
     }
@@ -84,16 +94,60 @@ final class HealthKitService: HealthKitServicing {
         store.execute(q)
     }
 
-    /// Returns true if the user has already authorized sharing of heart rate data.
-    /// Does not prompt — read-only status check.
-    func isAuthorized() -> Bool {
-        guard HKHealthStore.isHealthDataAvailable() else { return false }
-        return HKHealthStore().authorizationStatus(for: HKObjectType.quantityType(forIdentifier: .heartRate)!) == .sharingAuthorized
-    }
-
     func stopObservingHeartRate() {
         if let q = observerQuery { store.stop(q); observerQuery = nil }
         pollTimer?.invalidate(); pollTimer = nil
         store.disableBackgroundDelivery(for: hrType) { _, _ in }
+    }
+
+    func saveWorkout(_ summary: SessionSummary, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            completion(.failure(NSError(
+                domain: "com.lbcoding.beatzone",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "HealthKit is not available on this device."]
+            )))
+            return
+        }
+
+        let config = HKWorkoutConfiguration()
+        config.activityType = summary.activityType.hkType
+
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: config, device: .local())
+
+        builder.beginCollection(withStart: summary.startDate) { _, error in
+            if let error {
+                DispatchQueue.main.async { completion(.failure(error)) }
+                return
+            }
+
+            if !summary.samples.isEmpty {
+                let unit = HKUnit.count().unitDivided(by: .minute())
+
+                let hrSamples: [HKQuantitySample] = summary.samples.map { sample in
+                    HKQuantitySample(
+                        type: HKQuantityType(.heartRate),
+                        quantity: HKQuantity(unit: unit, doubleValue: sample.bpm),
+                        start: sample.date,
+                        end: sample.date
+                    )
+                }
+
+                builder.add(hrSamples) { _, _ in }
+            }
+
+            builder.endCollection(withEnd: summary.endDate) { _, error in
+                if let error {
+                    DispatchQueue.main.async { completion(.failure(error)) }
+                    return
+                }
+                builder.finishWorkout { _, error in
+                    DispatchQueue.main.async {
+                        if let error { completion(.failure(error)) }
+                        else         { completion(.success(())) }
+                    }
+                }
+            }
+        }
     }
 }
