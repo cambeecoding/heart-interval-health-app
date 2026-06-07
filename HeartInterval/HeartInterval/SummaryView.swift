@@ -41,8 +41,8 @@ struct SummaryView: View {
                         sessionStart: summary.startDate,
                         sessionEnd: summary.endDate
                     )
-                    .frame(height: 180)
-                    .padding(.horizontal, 24)
+                    .frame(height: 200)
+                    .padding(.horizontal, 16)
 
                     Spacer().frame(height: 32)
 
@@ -116,14 +116,50 @@ struct HRGraph: View {
     let sessionEnd: Date
 
     private let sparseGap: TimeInterval = 5
+    private let leftMargin: CGFloat = 36
+    private let bottomMargin: CGFloat = 22
 
     private var yBounds: (min: Double, max: Double) {
         let bpms = samples.map(\.bpm)
         let dataMin = bpms.min() ?? Double(minZone)
         let dataMax = bpms.max() ?? Double(maxZone)
-        let lo = max(40,  min(dataMin, Double(minZone)) - 15)
-        let hi = min(220, max(dataMax, Double(maxZone)) + 15)
-        return (lo, hi)
+        let lo = min(dataMin, Double(minZone))
+        let hi = max(dataMax, Double(maxZone))
+        let padding = max(10, (hi - lo) * 0.15)
+        return (max(40, lo - padding), min(220, hi + padding))
+    }
+
+    private var yTicks: [Int] {
+        let bounds = yBounds
+        let range = bounds.max - bounds.min
+        let step: Int
+        if range <= 30 { step = 5 }
+        else if range <= 60 { step = 10 }
+        else { step = 20 }
+
+        let first = Int((bounds.min / Double(step)).rounded(.up)) * step
+        let last  = Int((bounds.max / Double(step)).rounded(.down)) * step
+        return stride(from: first, through: last, by: step).map { $0 }
+    }
+
+    private func xTimeTicks(totalDuration: TimeInterval) -> [(label: String, fraction: Double)] {
+        guard totalDuration > 0 else { return [] }
+        let step: TimeInterval
+        if totalDuration <= 120 { step = 30 }
+        else if totalDuration <= 300 { step = 60 }
+        else if totalDuration <= 900 { step = 120 }
+        else { step = 300 }
+
+        var ticks: [(String, Double)] = []
+        var t: TimeInterval = 0
+        while t <= totalDuration {
+            let mins = Int(t) / 60
+            let secs = Int(t) % 60
+            let label = secs == 0 ? "\(mins)m" : "\(mins):\(String(format: "%02d", secs))"
+            ticks.append((label, t / totalDuration))
+            t += step
+        }
+        return ticks
     }
 
     var body: some View {
@@ -132,48 +168,103 @@ struct HRGraph: View {
 
             let bounds = yBounds
             let totalDuration = sessionEnd.timeIntervalSince(sessionStart)
+            let plotW = size.width - leftMargin
+            let plotH = size.height - bottomMargin
 
             func xOf(_ date: Date) -> CGFloat {
-                guard totalDuration > 0 else { return 0 }
-                return CGFloat(date.timeIntervalSince(sessionStart) / totalDuration) * size.width
+                guard totalDuration > 0 else { return leftMargin }
+                return leftMargin + CGFloat(date.timeIntervalSince(sessionStart) / totalDuration) * plotW
             }
 
             func yOf(_ bpm: Double) -> CGFloat {
                 let range = bounds.max - bounds.min
-                guard range > 0 else { return size.height / 2 }
-                return CGFloat((bounds.max - bpm) / range) * size.height
+                guard range > 0 else { return plotH / 2 }
+                return CGFloat((bounds.max - bpm) / range) * plotH
+            }
+
+            // Y axis line
+            var yAxis = Path()
+            yAxis.move(to: CGPoint(x: leftMargin, y: 0))
+            yAxis.addLine(to: CGPoint(x: leftMargin, y: plotH))
+            context.stroke(yAxis, with: .color(.white.opacity(0.2)),
+                           style: StrokeStyle(lineWidth: 1))
+
+            // X axis line
+            var xAxis = Path()
+            xAxis.move(to: CGPoint(x: leftMargin, y: plotH))
+            xAxis.addLine(to: CGPoint(x: size.width, y: plotH))
+            context.stroke(xAxis, with: .color(.white.opacity(0.2)),
+                           style: StrokeStyle(lineWidth: 1))
+
+            // Y axis ticks and gridlines
+            for bpm in yTicks {
+                let y = yOf(Double(bpm))
+                guard y >= 0, y <= plotH else { continue }
+
+                // Gridline
+                var gridLine = Path()
+                gridLine.move(to: CGPoint(x: leftMargin, y: y))
+                gridLine.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(gridLine, with: .color(.white.opacity(0.06)),
+                               style: StrokeStyle(lineWidth: 0.5))
+
+                // Label
+                context.draw(
+                    Text("\(bpm)").font(.system(size: 9, weight: .light)).foregroundStyle(Color.white.opacity(0.4)),
+                    at: CGPoint(x: leftMargin - 4, y: y), anchor: .trailing
+                )
+            }
+
+            // X axis ticks
+            for tick in xTimeTicks(totalDuration: totalDuration) {
+                let x = leftMargin + CGFloat(tick.fraction) * plotW
+                context.draw(
+                    Text(tick.label).font(.system(size: 9, weight: .light)).foregroundStyle(Color.white.opacity(0.4)),
+                    at: CGPoint(x: x, y: plotH + 4), anchor: .top
+                )
+
+                // Small tick mark
+                var tickMark = Path()
+                tickMark.move(to: CGPoint(x: x, y: plotH))
+                tickMark.addLine(to: CGPoint(x: x, y: plotH + 3))
+                context.stroke(tickMark, with: .color(.white.opacity(0.2)),
+                               style: StrokeStyle(lineWidth: 0.5))
             }
 
             // Zone band
             let zoneTop = yOf(Double(maxZone))
             let zoneBot = yOf(Double(minZone))
             context.fill(
-                Path(CGRect(x: 0, y: zoneTop, width: size.width, height: zoneBot - zoneTop)),
-                with: .color(.green.opacity(0.12))
+                Path(CGRect(x: leftMargin, y: zoneTop, width: plotW, height: zoneBot - zoneTop)),
+                with: .color(.green.opacity(0.1))
             )
 
             // Zone boundary dashed lines
             for y in [zoneTop, zoneBot] {
+                guard y >= 0, y <= plotH else { continue }
                 var line = Path()
-                line.move(to: CGPoint(x: 0, y: y))
+                line.move(to: CGPoint(x: leftMargin, y: y))
                 line.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(line, with: .color(.green.opacity(0.4)),
+                context.stroke(line, with: .color(.green.opacity(0.35)),
                                style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
             }
 
-            // Zone labels
-            context.draw(
-                Text("\(maxZone) bpm").font(.caption2).foregroundStyle(Color.green.opacity(0.65)),
-                at: CGPoint(x: 4, y: zoneTop - 2), anchor: .bottomLeading
-            )
-            context.draw(
-                Text("\(minZone) bpm").font(.caption2).foregroundStyle(Color.green.opacity(0.65)),
-                at: CGPoint(x: 4, y: zoneBot + 2), anchor: .topLeading
-            )
+            // Zone labels on right edge
+            if zoneTop >= 0, zoneTop <= plotH {
+                context.draw(
+                    Text("\(maxZone)").font(.system(size: 9, weight: .medium)).foregroundStyle(Color.green.opacity(0.6)),
+                    at: CGPoint(x: size.width - 2, y: zoneTop - 1), anchor: .bottomTrailing
+                )
+            }
+            if zoneBot >= 0, zoneBot <= plotH {
+                context.draw(
+                    Text("\(minZone)").font(.system(size: 9, weight: .medium)).foregroundStyle(Color.green.opacity(0.6)),
+                    at: CGPoint(x: size.width - 2, y: zoneBot + 1), anchor: .topTrailing
+                )
+            }
 
             // HR line segments
             guard samples.count >= 2 else {
-                // Single sample: draw a dot
                 if let s = samples.first {
                     let x = xOf(s.date)
                     let y = yOf(s.bpm)
@@ -195,17 +286,15 @@ struct HRGraph: View {
                 seg.addLine(to: CGPoint(x: xOf(curr.date), y: yOf(curr.bpm)))
 
                 if gap > sparseGap {
-                    // Sparse gap: dashed white line
                     context.stroke(seg, with: .color(.white.opacity(0.3)),
                                    style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [3, 5]))
                 } else {
-                    // Dense: solid line coloured by zone
                     context.stroke(seg, with: .color(segmentColor(bpm: prev.bpm)),
                                    style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                 }
             }
 
-            // Terminal dots (first and last sample)
+            // Terminal dots
             for s in [samples.first!, samples.last!] {
                 let x = xOf(s.date)
                 let y = yOf(s.bpm)

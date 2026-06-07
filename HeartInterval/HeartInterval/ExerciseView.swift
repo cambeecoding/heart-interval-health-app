@@ -7,9 +7,8 @@ struct ExerciseView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            // ScrollView ensures content never gets clipped on any screen size
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
 
                     // ── Elapsed time + progress ring ──────────────────────
                     ZStack {
@@ -38,7 +37,7 @@ struct ExerciseView: View {
                         .background(Color.white.opacity(0.08))
                         .padding(.horizontal, 40)
 
-                    // ── Heart rate metrics ────────────────────────────────
+                    // ── Heart rate ────────────────────────────────────────
                     if viewModel.currentHR == nil {
                         VStack(spacing: 10) {
                             ProgressView()
@@ -55,9 +54,6 @@ struct ExerciseView: View {
                         .padding(.vertical, 12)
                     } else {
                         let hr = viewModel.currentHR ?? 0
-                        let hrColor: Color = hr > viewModel.maxHR ? .red
-                                           : hr < viewModel.minHR ? .orange
-                                           : .green
 
                         // Source badge
                         HStack(spacing: 6) {
@@ -81,60 +77,43 @@ struct ExerciseView: View {
                                     ? .green.opacity(0.7) : .orange.opacity(0.7))
                         }
 
-                        // Current BPM — large, zone-coloured
-                        VStack(spacing: 4) {
-                            Text("\(hr)")
-                                .font(.system(size: 56, weight: .thin, design: .rounded))
-                                .foregroundColor(hrColor)
-                                .animation(.easeInOut(duration: 0.3), value: hr)
-                                .contentTransition(.numericText())
-                            Text("bpm")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.3))
+                        // Speedometer gauge
+                        HRSpeedometer(
+                            currentHR: hr,
+                            avgHR: viewModel.totalAvgHR,
+                            minZone: viewModel.minHR,
+                            maxZone: viewModel.maxHR
+                        )
+                        .frame(width: 260, height: 170)
+                        .padding(.top, 4)
 
-                            // Intensity hint
-                            if hr < viewModel.minHR {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "arrow.up")
-                                        .font(.caption2.weight(.semibold))
-                                    Text("up the intensity")
-                                        .font(.caption2)
-                                }
-                                .foregroundColor(.orange.opacity(0.85))
-                            } else if hr > viewModel.maxHR {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "arrow.down")
-                                        .font(.caption2.weight(.semibold))
-                                    Text("decrease intensity")
-                                        .font(.caption2)
-                                }
-                                .foregroundColor(.red.opacity(0.85))
-                            } else {
-                                // Reserve height so layout doesn't jump
-                                Color.clear.frame(height: 16)
+                        // Intensity hint
+                        if hr < viewModel.minHR {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up")
+                                    .font(.caption2.weight(.semibold))
+                                Text("up the intensity")
+                                    .font(.caption2)
                             }
+                            .foregroundColor(.orange.opacity(0.85))
+                        } else if hr > viewModel.maxHR {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down")
+                                    .font(.caption2.weight(.semibold))
+                                Text("decrease intensity")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.red.opacity(0.85))
+                        } else {
+                            Color.clear.frame(height: 16)
                         }
-
-                        // Zone scale
-                        HRZoneBar(minHR: viewModel.minHR,
-                                  maxHR: viewModel.maxHR,
-                                  currentHR: hr)
-                            .padding(.horizontal, 32)
-
-                        // Session average
-                        MetricRow(label: "Session avg",
-                                  value: viewModel.totalAvgHR,
-                                  unit: "bpm",
-                                  valueColor: .yellow)
                     }
                 }
                 .padding(.top, 16)
-                // Bottom padding ensures content clears the pinned button
                 .padding(.bottom, 88)
                 .frame(maxWidth: .infinity)
             }
         }
-        // PAUSE button pinned above safe area — always visible on every device
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 Divider().background(Color.white.opacity(0.08))
@@ -161,61 +140,169 @@ struct ExerciseView: View {
     }
 }
 
-// MARK: - HR Zone Bar
+// MARK: - HR Speedometer
 
-private struct HRZoneBar: View {
-    let minHR: Int
-    let maxHR: Int
+private struct HRSpeedometer: View {
     let currentHR: Int
+    let avgHR: Int?
+    let minZone: Int
+    let maxZone: Int
 
-    private let trackH:  CGFloat = 4
-    private let labelW:  CGFloat = 36   // inset on each side for min/max labels
-    private let pointerH: CGFloat = 10  // height of the downward tick below the track
+    private let startAngle: Double = 225
+    private let endAngle: Double = -45
+    private var sweepAngle: Double { startAngle - endAngle }
 
-    private func fraction(trackW: CGFloat) -> CGFloat {
-        let span = maxHR - minHR
-        guard span > 0 else { return 0.5 }
-        return min(max(CGFloat(currentHR - minHR) / CGFloat(span), 0), 1)
+    private var scaleMin: Int {
+        max(40, min(minZone - 30, currentHR - 10))
+    }
+
+    private var scaleMax: Int {
+        min(220, max(maxZone + 30, currentHR + 10))
+    }
+
+    private func angle(for bpm: Int) -> Double {
+        let range = Double(scaleMax - scaleMin)
+        guard range > 0 else { return startAngle }
+        let fraction = Double(bpm - scaleMin) / range
+        return startAngle - fraction * sweepAngle
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let totalW = geo.size.width
-            let trackW = totalW - labelW * 2
-            let f      = fraction(trackW: trackW)
-            let tickX  = labelW + f * trackW   // x-centre of the tick
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height * 0.75)
+            let radius = min(size.width, size.height * 1.3) / 2 - 10
 
-            ZStack(alignment: .leading) {
+            let minZoneAngle = angle(for: minZone)
+            let maxZoneAngle = angle(for: maxZone)
+            let needleAngle  = angle(for: currentHR)
 
-                // ── Background track ──────────────────────────────────────
-                Capsule()
-                    .fill(Color.white.opacity(0.12))
-                    .frame(width: trackW, height: trackH)
-                    .offset(x: labelW, y: 0)
+            // Track: below zone (orange)
+            drawArc(context: context, center: center, radius: radius,
+                    from: startAngle, to: minZoneAngle,
+                    color: .orange.opacity(0.25), lineWidth: 12)
 
-                // ── Tick / pointer ────────────────────────────────────────
-                // A thin vertical line dropping below the track
-                Rectangle()
-                    .fill(Color.white.opacity(0.7))
-                    .frame(width: 2, height: trackH + pointerH)
-                    .offset(x: tickX - 1, y: 0)
-                    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: currentHR)
+            // Track: in zone (green)
+            drawArc(context: context, center: center, radius: radius,
+                    from: minZoneAngle, to: maxZoneAngle,
+                    color: .green.opacity(0.3), lineWidth: 12)
 
-                // ── Min label — flush left ────────────────────────────────
-                Text("\(minHR)")
-                    .font(.system(size: 11, weight: .light, design: .rounded))
-                    .foregroundColor(.white.opacity(0.3))
-                    .frame(width: labelW, alignment: .leading)
-                    .offset(x: 0, y: -1)
+            // Track: above zone (red)
+            drawArc(context: context, center: center, radius: radius,
+                    from: maxZoneAngle, to: endAngle,
+                    color: .red.opacity(0.25), lineWidth: 12)
 
-                // ── Max label — flush right ───────────────────────────────
-                Text("\(maxHR)")
-                    .font(.system(size: 11, weight: .light, design: .rounded))
-                    .foregroundColor(.white.opacity(0.3))
-                    .frame(width: labelW, alignment: .trailing)
-                    .offset(x: totalW - labelW, y: -1)
+            // Zone boundary ticks
+            for bpm in [minZone, maxZone] {
+                let a = angle(for: bpm) * .pi / 180
+                let inner = radius - 10
+                let outer = radius + 10
+                var tick = Path()
+                tick.move(to: CGPoint(
+                    x: center.x + cos(a) * inner,
+                    y: center.y - sin(a) * inner
+                ))
+                tick.addLine(to: CGPoint(
+                    x: center.x + cos(a) * outer,
+                    y: center.y - sin(a) * outer
+                ))
+                context.stroke(tick, with: .color(.white.opacity(0.5)),
+                               style: StrokeStyle(lineWidth: 1.5))
             }
+
+            // Zone boundary labels
+            let minA = minZoneAngle * .pi / 180
+            let maxA = maxZoneAngle * .pi / 180
+            let labelR = radius + 18
+
+            context.draw(
+                Text("\(minZone)").font(.system(size: 10, weight: .light)).foregroundStyle(Color.white.opacity(0.5)),
+                at: CGPoint(x: center.x + cos(minA) * labelR, y: center.y - sin(minA) * labelR)
+            )
+            context.draw(
+                Text("\(maxZone)").font(.system(size: 10, weight: .light)).foregroundStyle(Color.white.opacity(0.5)),
+                at: CGPoint(x: center.x + cos(maxA) * labelR, y: center.y - sin(maxA) * labelR)
+            )
+
+            // Scale end labels
+            let scaleMinA = angle(for: scaleMin) * .pi / 180
+            let scaleMaxA = angle(for: scaleMax) * .pi / 180
+
+            context.draw(
+                Text("\(scaleMin)").font(.system(size: 9, weight: .light)).foregroundStyle(Color.white.opacity(0.3)),
+                at: CGPoint(x: center.x + cos(scaleMinA) * (radius + 16),
+                            y: center.y - sin(scaleMinA) * (radius + 16))
+            )
+            context.draw(
+                Text("\(scaleMax)").font(.system(size: 9, weight: .light)).foregroundStyle(Color.white.opacity(0.3)),
+                at: CGPoint(x: center.x + cos(scaleMaxA) * (radius + 16),
+                            y: center.y - sin(scaleMaxA) * (radius + 16))
+            )
+
+            // Needle
+            let nA = needleAngle * .pi / 180
+            let needleColor: Color = currentHR > maxZone ? .red
+                                   : currentHR < minZone ? .orange
+                                   : .green
+
+            var needle = Path()
+            needle.move(to: CGPoint(
+                x: center.x + cos(nA) * (radius - 20),
+                y: center.y - sin(nA) * (radius - 20)
+            ))
+            needle.addLine(to: CGPoint(
+                x: center.x + cos(nA) * (radius + 4),
+                y: center.y - sin(nA) * (radius + 4)
+            ))
+            context.stroke(needle, with: .color(needleColor),
+                           style: StrokeStyle(lineWidth: 3, lineCap: .round))
+
+            // Needle tip dot
+            context.fill(
+                Path(ellipseIn: CGRect(
+                    x: center.x + cos(nA) * (radius + 4) - 4,
+                    y: center.y - sin(nA) * (radius + 4) - 4,
+                    width: 8, height: 8
+                )),
+                with: .color(needleColor)
+            )
         }
-        .frame(height: trackH + pointerH + 4)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: currentHR)
+        .overlay {
+            // Centre text overlay
+            VStack(spacing: 2) {
+                let hrColor: Color = currentHR > maxZone ? .red
+                                   : currentHR < minZone ? .orange
+                                   : .green
+
+                Text("\(currentHR)")
+                    .font(.system(size: 48, weight: .thin, design: .rounded))
+                    .foregroundColor(hrColor)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.3), value: currentHR)
+
+                Text("bpm")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.3))
+
+                if let avg = avgHR {
+                    Text("avg \(avg)")
+                        .font(.system(size: 13, weight: .light))
+                        .foregroundColor(.yellow.opacity(0.7))
+                        .contentTransition(.numericText())
+                        .animation(.easeInOut(duration: 0.3), value: avg)
+                }
+            }
+            .offset(y: 16)
+        }
+    }
+
+    private func drawArc(context: GraphicsContext, center: CGPoint, radius: CGFloat,
+                         from: Double, to: Double, color: Color, lineWidth: CGFloat) {
+        var arc = Path()
+        arc.addArc(center: center, radius: radius,
+                   startAngle: .degrees(-from), endAngle: .degrees(-to),
+                   clockwise: false)
+        context.stroke(arc, with: .color(color),
+                       style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
     }
 }
