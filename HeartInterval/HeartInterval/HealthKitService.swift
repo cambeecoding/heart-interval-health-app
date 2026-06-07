@@ -1,6 +1,15 @@
 import HealthKit
 
-final class HealthKitService {
+/// Protocol surface for ExerciseViewModel — enables a test double without HealthKit.
+protocol HealthKitServicing: AnyObject {
+    func requestAuthorization(completion: @escaping (Bool) -> Void)
+    func startObservingHeartRate(since: Date, handler: @escaping (Double, Date) -> Void)
+    func fetchRecentSample(within seconds: TimeInterval, completion: @escaping (Double?) -> Void)
+    func isAuthorized() -> Bool
+    func stopObservingHeartRate()
+}
+
+final class HealthKitService: HealthKitServicing {
 
     private let store  = HKHealthStore()
     private let hrType = HKQuantityType(.heartRate)
@@ -19,14 +28,15 @@ final class HealthKitService {
     }
 
     /// Calls handler with (bpm, sampleDate) — date lets the caller deduplicate.
-    func startObservingHeartRate(handler: @escaping (Double, Date) -> Void) {
+    /// `since` anchors the query so pre-exercise samples can never be returned.
+    func startObservingHeartRate(since: Date, handler: @escaping (Double, Date) -> Void) {
         let unit = HKUnit.count().unitDivided(by: .minute())
 
         store.enableBackgroundDelivery(for: hrType, frequency: .immediate) { _, _ in }
 
         let observer = HKObserverQuery(sampleType: hrType, predicate: nil) { [weak self] _, completionHandler, error in
             guard error == nil else { completionHandler(); return }
-            self?.fetchLatestSample(unit: unit, handler: handler)
+            self?.fetchLatestSample(since: since, unit: unit, handler: handler)
             completionHandler()
         }
         store.execute(observer)
@@ -34,29 +44,44 @@ final class HealthKitService {
 
         // 5-second polling fallback for Garmin's inconsistent batch writes
         let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
-            self?.fetchLatestSample(unit: unit, handler: handler)
+            self?.fetchLatestSample(since: since, unit: unit, handler: handler)
         }
         RunLoop.main.add(timer, forMode: .common)
         pollTimer = timer
 
-        fetchLatestSample(unit: unit, handler: handler)
+        fetchLatestSample(since: since, unit: unit, handler: handler)
     }
 
-    private func fetchLatestSample(unit: HKUnit, handler: @escaping (Double, Date) -> Void) {
-        // Only accept samples written in the last 5 minutes — prevents stale
-        // resting-HR readings (e.g. 57bpm from hours ago) from being displayed
-        let freshPredicate = HKQuery.predicateForSamples(
-            withStart: Date().addingTimeInterval(-300),
-            end: nil,
-            options: []
-        )
+    private func fetchLatestSample(since: Date, unit: HKUnit, handler: @escaping (Double, Date) -> Void) {
+        let predicate = HKQuery.predicateForSamples(withStart: since, end: nil, options: [])
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        let query = HKSampleQuery(sampleType: hrType, predicate: freshPredicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+        let query = HKSampleQuery(sampleType: hrType, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
             guard let sample = samples?.first as? HKQuantitySample else { return }
             let bpm = sample.quantity.doubleValue(for: unit)
             handler(bpm, sample.endDate)
         }
         store.execute(query)
+    }
+
+    /// One-shot liveness check: returns the most recent HR sample if written
+    /// within `seconds` seconds, otherwise nil. Used for standby polling to
+    /// detect whether the Watch is actively streaming HR right now.
+    func fetchRecentSample(within seconds: TimeInterval, completion: @escaping (Double?) -> Void) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            completion(nil); return
+        }
+        let predicate = HKQuery.predicateForSamples(
+            withStart: Date().addingTimeInterval(-seconds),
+            end: nil,
+            options: []
+        )
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let q = HKSampleQuery(sampleType: hrType, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+            let bpm = (samples?.first as? HKQuantitySample)
+                .map { $0.quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute())) }
+            DispatchQueue.main.async { completion(bpm) }
+        }
+        store.execute(q)
     }
 
     /// Returns true if the user has already authorized sharing of heart rate data.
