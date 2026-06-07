@@ -63,10 +63,9 @@ struct ExerciseView: View {
 
                         // Source badge
                         HStack(spacing: 6) {
-                            Image(systemName: viewModel.hrSource == .ble
-                                  ? "antenna.radiowaves.left.and.right" : "heart.fill")
+                            Image(systemName: hrSourceIcon(viewModel.hrSource))
                                 .font(.caption2)
-                            Text(viewModel.hrSource == .ble ? "Bluetooth HR" : "Apple Health")
+                            Text(hrSourceLabel(viewModel.hrSource))
                                 .font(.caption2)
                             if let age = viewModel.secondsSinceLastHR, age > 15 {
                                 Text("· \(age)s ago")
@@ -143,6 +142,24 @@ struct ExerciseView: View {
         let m = totalSeconds / 60
         let s = totalSeconds % 60
         return String(format: "%02d:%02d", m, s)
+    }
+
+    private func hrSourceIcon(_ source: HRSource) -> String {
+        switch source {
+        case .ble:       return "antenna.radiowaves.left.and.right"
+        case .watch:     return "applewatch"
+        case .healthKit: return "heart.fill"
+        case .none:      return "heart.fill"
+        }
+    }
+
+    private func hrSourceLabel(_ source: HRSource) -> String {
+        switch source {
+        case .ble:       return "Bluetooth HR"
+        case .watch:     return "Apple Watch"
+        case .healthKit: return "Apple Health"
+        case .none:      return "Apple Health"
+        }
     }
 }
 

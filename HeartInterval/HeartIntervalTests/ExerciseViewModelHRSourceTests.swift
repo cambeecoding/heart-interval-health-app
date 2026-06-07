@@ -37,10 +37,12 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeVM(hk: SpyHealthKitService = SpyHealthKitService(),
+    private func makeVM(hk: SpyHealthKitService? = nil,
+                        wc: SpyWatchConnectivityService? = nil,
                         pollInterval: TimeInterval = 0.05) -> ExerciseViewModel {
         ExerciseViewModel(audioService: SpyAudioService(),
-                          healthKitService: hk,
+                          healthKitService: hk ?? SpyHealthKitService(),
+                          watchConnectivityService: wc ?? SpyWatchConnectivityService(),
                           standbyPollInterval: pollInterval)
     }
 

@@ -13,6 +13,7 @@ enum AppState: Equatable {
 enum HRSource {
     case none
     case ble
+    case watch
     case healthKit
 }
 
@@ -80,6 +81,7 @@ final class ExerciseViewModel: ObservableObject {
     // MARK: - Services
     private let bleService       = BLEHeartRateService()
     let healthKitService: HealthKitServicing
+    let watchConnectivityService: WatchConnectivityServicing
     let audioService: AudioServiceProtocol
     private let workoutManager   = WorkoutManager()
     private let standbyPollInterval: TimeInterval
@@ -90,8 +92,11 @@ final class ExerciseViewModel: ObservableObject {
     private var summaryTimer: Timer?
     private var standbyPollTimer: Timer?
     private var noHRTimeoutTimer: Timer?
+    private var watchTimeoutTimer: Timer?
     /// Seconds to wait before warning the user that no HR has been received.
     private let noHRTimeoutSeconds: TimeInterval = 20
+    /// Seconds without Watch HR before falling back to HealthKit.
+    private let watchTimeoutSeconds: TimeInterval = 6
     #if targetEnvironment(simulator)
     private var mockHRTimer: Timer?
     private var mockHRIndex = 0
@@ -115,9 +120,11 @@ final class ExerciseViewModel: ObservableObject {
 
     init(audioService: AudioServiceProtocol? = nil,
          healthKitService: HealthKitServicing? = nil,
+         watchConnectivityService: WatchConnectivityServicing? = nil,
          standbyPollInterval: TimeInterval = 5) {
         self.audioService = audioService ?? AudioService()
         self.healthKitService = healthKitService ?? HealthKitService()
+        self.watchConnectivityService = watchConnectivityService ?? WatchConnectivityService()
         self.standbyPollInterval = standbyPollInterval
         NotificationCenter.default.addObserver(
             self,
@@ -144,6 +151,24 @@ final class ExerciseViewModel: ObservableObject {
                 }
             }
         }
+
+        self.watchConnectivityService.onHeartRate = { [weak self] bpm, date in
+            Task { @MainActor [weak self] in
+                guard let self, self.hrSource != .ble else { return }
+                if self.appState == .standby {
+                    self.standbyWatchBPM = bpm
+                } else {
+                    self.handleNewHRSample(bpm, source: .watch, date: date)
+                }
+            }
+        }
+        self.watchConnectivityService.onStartExercise = { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.appState == .standby else { return }
+                self.startExercise()
+            }
+        }
+        self.watchConnectivityService.activate()
 
         // Start BLE scanning immediately so we can show HR source status on standby
         bleService.startScanning()
@@ -243,7 +268,7 @@ final class ExerciseViewModel: ObservableObject {
             self.startNoHRTimeout()
             self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
                 Task { @MainActor [weak self] in
-                    guard let self, self.hrSource != .ble else { return }
+                    guard let self, self.hrSource != .ble && self.hrSource != .watch else { return }
                     self.handleNewHRSample(bpm, source: .healthKit, date: date)
                 }
             }
@@ -357,7 +382,7 @@ final class ExerciseViewModel: ObservableObject {
     // MARK: - Private helpers
 
     func handleNewHRSample(_ bpm: Double, source: HRSource, date: Date = Date()) {
-        if source == .healthKit {
+        if source == .healthKit || source == .watch {
             if let last = lastSampleDate, date <= last { return }
             lastSampleDate = date
         }
@@ -366,10 +391,25 @@ final class ExerciseViewModel: ObservableObject {
         hrSourceTimedOut   = false
         noHRTimeoutTimer?.invalidate()
         noHRTimeoutTimer   = nil
+        if source == .watch {
+            resetWatchTimeout()
+        }
         allSamples.append(HRSample(bpm: bpm, date: date))
         currentHR  = Int(bpm.rounded())
         totalAvgHR = average(of: allSamples.map(\.bpm))
         checkZoneBreaches()
+    }
+
+    private func resetWatchTimeout() {
+        watchTimeoutTimer?.invalidate()
+        let t = Timer(timeInterval: watchTimeoutSeconds, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.hrSource == .watch else { return }
+                self.hrSource = .none
+            }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        watchTimeoutTimer = t
     }
 
     private func checkZoneBreaches() {
@@ -442,10 +482,11 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func stopTimers() {
-        clockTimer?.invalidate();      clockTimer = nil
-        speakTimer?.invalidate();      speakTimer = nil
-        summaryTimer?.invalidate();    summaryTimer = nil
+        clockTimer?.invalidate();       clockTimer = nil
+        speakTimer?.invalidate();       speakTimer = nil
+        summaryTimer?.invalidate();     summaryTimer = nil
         noHRTimeoutTimer?.invalidate(); noHRTimeoutTimer = nil
+        watchTimeoutTimer?.invalidate(); watchTimeoutTimer = nil
         #if targetEnvironment(simulator)
         mockHRTimer?.invalidate();     mockHRTimer = nil
         #endif

@@ -3,10 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22C0FBE62FD609A6006498D0 /* BeatZoneWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 22C0FBDC2FD609A5006498D0 /* BeatZoneWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		22C0FBF72FD60BCD006498D0 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WatchMessage.swift */; };
 		A001 /* HeartIntervalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* HeartIntervalApp.swift */; };
 		A002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* ContentView.swift */; };
 		A003 /* ExerciseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* ExerciseViewModel.swift */; };
@@ -24,11 +26,21 @@
 		A015 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* SplashView.swift */; };
 		A016 /* SessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* SessionSummary.swift */; };
 		A017 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* SummaryView.swift */; };
+		A020 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* WatchConnectivityService.swift */; };
+		A021 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WatchMessage.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 		T002 /* ExerciseViewModelHRSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFHR /* ExerciseViewModelHRSourceTests.swift */; };
+		T003 /* WatchConnectivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF03 /* WatchConnectivityTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		22C0FBE42FD609A6006498D0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJ /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 22C0FBDB2FD609A5006498D0;
+			remoteInfo = "BeatZoneWatch Watch App";
+		};
 		TCIP /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = PROJ /* Project object */;
@@ -38,7 +50,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		22C0FBE72FD609A6006498D0 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				22C0FBE62FD609A6006498D0 /* BeatZoneWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		22C0FBDC2FD609A5006498D0 /* BeatZoneWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BeatZoneWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F001 /* HeartIntervalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartIntervalApp.swift; sourceTree = "<group>"; };
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F003 /* ExerciseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModel.swift; sourceTree = "<group>"; };
@@ -58,13 +85,27 @@
 		F017 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		F018 /* SessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummary.swift; sourceTree = "<group>"; };
 		F019 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
+		F020 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
+		F021 /* WatchMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchMessage.swift; path = ../Shared/WatchMessage.swift; sourceTree = "<group>"; };
 		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
-		TFHR /* ExerciseViewModelHRSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelHRSourceTests.swift; sourceTree = "<group>"; };
 		TF02 /* BeatZoneTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BeatZoneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		TF03 /* WatchConnectivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityTests.swift; sourceTree = "<group>"; };
+		TFHR /* ExerciseViewModelHRSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelHRSourceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		22C0FBDD2FD609A5006498D0 /* BeatZoneWatch Watch App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "BeatZoneWatch Watch App"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		22C0FBD92FD609A5006498D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BPF1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -87,6 +128,7 @@
 			children = (
 				PROD /* BeatZone.app */,
 				TF02 /* BeatZoneTests.xctest */,
+				22C0FBDC2FD609A5006498D0 /* BeatZoneWatch Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -96,6 +138,7 @@
 			children = (
 				GRP_SRC /* HeartInterval */,
 				TGRP /* HeartIntervalTests */,
+				22C0FBDD2FD609A5006498D0 /* BeatZoneWatch Watch App */,
 				GRP_PROD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,6 +165,8 @@
 				F017 /* SplashView.swift */,
 				F018 /* SessionSummary.swift */,
 				F019 /* SummaryView.swift */,
+				F020 /* WatchConnectivityService.swift */,
+				F021 /* WatchMessage.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -131,6 +176,7 @@
 			children = (
 				TF01 /* ExerciseViewModelTests.swift */,
 				TFHR /* ExerciseViewModelHRSourceTests.swift */,
+				TF03 /* WatchConnectivityTests.swift */,
 			);
 			path = HeartIntervalTests;
 			sourceTree = "<group>";
@@ -138,6 +184,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		22C0FBDB2FD609A5006498D0 /* BeatZoneWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 22C0FBEA2FD609A6006498D0 /* Build configuration list for PBXNativeTarget "BeatZoneWatch Watch App" */;
+			buildPhases = (
+				22C0FBD82FD609A5006498D0 /* Sources */,
+				22C0FBD92FD609A5006498D0 /* Frameworks */,
+				22C0FBDA2FD609A5006498D0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				22C0FBDD2FD609A5006498D0 /* BeatZoneWatch Watch App */,
+			);
+			name = "BeatZoneWatch Watch App";
+			packageProductDependencies = (
+			);
+			productName = "BeatZoneWatch Watch App";
+			productReference = 22C0FBDC2FD609A5006498D0 /* BeatZoneWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 		TGT1 /* BeatZone */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CFGLIST_TGT /* Build configuration list for PBXNativeTarget "BeatZone" */;
@@ -146,10 +214,12 @@
 				BPF1 /* Frameworks */,
 				BPR1 /* Resources */,
 				BPSS1 /* Set Version from Git Tag */,
+				22C0FBE72FD609A6006498D0 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				22C0FBE52FD609A6006498D0 /* PBXTargetDependency */,
 			);
 			name = BeatZone;
 			productName = HeartInterval;
@@ -180,9 +250,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
+					22C0FBDB2FD609A5006498D0 = {
+						CreatedOnToolsVersion = 26.5;
+						LastSwiftMigration = 2650;
+					};
 					TGT1 = {
 						CreatedOnToolsVersion = 15.0;
 					};
@@ -207,11 +281,19 @@
 			targets = (
 				TGT1 /* BeatZone */,
 				TTGT /* BeatZoneTests */,
+				22C0FBDB2FD609A5006498D0 /* BeatZoneWatch Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		22C0FBDA2FD609A5006498D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BPR1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -245,6 +327,14 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		22C0FBD82FD609A5006498D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				22C0FBF72FD60BCD006498D0 /* WatchMessage.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BPS1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -265,6 +355,8 @@
 				A015 /* SplashView.swift in Sources */,
 				A016 /* SessionSummary.swift in Sources */,
 				A017 /* SummaryView.swift in Sources */,
+				A020 /* WatchConnectivityService.swift in Sources */,
+				A021 /* WatchMessage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,12 +366,18 @@
 			files = (
 				T001 /* ExerciseViewModelTests.swift in Sources */,
 				T002 /* ExerciseViewModelHRSourceTests.swift in Sources */,
+				T003 /* WatchConnectivityTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		22C0FBE52FD609A6006498D0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 22C0FBDB2FD609A5006498D0 /* BeatZoneWatch Watch App */;
+			targetProxy = 22C0FBE42FD609A6006498D0 /* PBXContainerItemProxy */;
+		};
 		TDEP /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = TGT1 /* BeatZone */;
@@ -288,6 +386,88 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		22C0FBE82FD609A6006498D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = BeatZone;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "BeatZone reads your heart rate during workouts to stream it to your iPhone for zone-based training guidance.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "recording summary exercise session.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lbcoding.beatzone;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Debug;
+		};
+		22C0FBE92FD609A6006498D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "BeatZoneWatch Watch App/BeatZoneWatch Watch AppRelease.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5M83D8HT7Y;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = BeatZone;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "BeatZone reads your heart rate during workouts to stream it to your iPhone for zone-based training guidance.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "recording summary exercise session.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lbcoding.beatzone;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lbcoding.beatzone.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Release;
+		};
 		CFG_PROJ_DBG /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -512,6 +692,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		22C0FBEA2FD609A6006498D0 /* Build configuration list for PBXNativeTarget "BeatZoneWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22C0FBE82FD609A6006498D0 /* Debug */,
+				22C0FBE92FD609A6006498D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CFGLIST_PROJ /* Build configuration list for PBXProject "BeatZone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
