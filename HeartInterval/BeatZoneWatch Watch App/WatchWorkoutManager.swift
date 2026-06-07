@@ -19,6 +19,25 @@ final class WatchWorkoutManager: NSObject, ObservableObject {
     private let sendInterval: TimeInterval = 2
 
     func startWorkout() {
+        let typesToRead: Set<HKObjectType> = [
+            HKQuantityType(.heartRate)
+        ]
+        let typesToWrite: Set<HKSampleType> = [
+            HKObjectType.workoutType()
+        ]
+        healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead) { [weak self] _, error in
+            #if DEBUG
+            if let error {
+                print("[BeatZone Watch] HealthKit auth error: \(error)")
+            }
+            #endif
+            DispatchQueue.main.async {
+                self?.beginWorkoutSession()
+            }
+        }
+    }
+
+    private func beginWorkoutSession() {
         let config = HKWorkoutConfiguration()
         config.activityType = .other
         config.locationType = .unknown
