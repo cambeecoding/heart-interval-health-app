@@ -3,6 +3,7 @@ import CoreBluetooth
 enum BLEState {
     case idle
     case scanning
+    case available     // Discovered in standby, not connected
     case connecting
     case connected
     case disconnected
@@ -16,50 +17,112 @@ final class BLEHeartRateService: NSObject {
     private var central:    CBCentralManager?
     private var peripheral: CBPeripheral?
 
+    /// True once we've emitted `.available` for the current standby pass — gates
+    /// repeated state callbacks when scanning with `allowDuplicates`.
+    private var availableEmitted = false
+
+    /// When true, discovery results lead to an active connection.
+    /// When false (standby), discovery only updates the "available" status.
+    private var wantsConnection: Bool = false
+
     var isExercising: Bool = false
 
     var onHR:           ((Double) -> Void)?
     var onStateChange:  ((BLEState) -> Void)?
 
-    /// Start scanning. If central has not been created yet, creates it (which will trigger
-    /// centralManagerDidUpdateState when powered on). If already powered on, starts scanning immediately.
+    /// Begin passive discovery in standby. Will surface available HR monitors
+    /// without holding a connection. Call `start()` to actually connect.
     func startScanning() {
+        wantsConnection = false
+        availableEmitted = false
         if central == nil {
             central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
         } else if central?.state == .poweredOn {
-            onStateChange?(.scanning)
-            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+            beginDiscovery()
         }
     }
 
-    /// Disconnect from current peripheral and return to scanning (standby mode).
+    /// Disconnect from current peripheral and return to standby discovery mode.
     func returnToScanning() {
         isExercising = false
+        wantsConnection = false
+        availableEmitted = false
         if let p = peripheral {
             central?.cancelPeripheralConnection(p)
         }
         peripheral = nil
-        onStateChange?(.scanning)
         if central?.state == .poweredOn {
-            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+            beginDiscovery()
         }
     }
 
+    /// Begin exercise: connect to a discovered/system-connected peripheral, or scan and auto-connect.
     func start() {
         isExercising = true
+        wantsConnection = true
+        availableEmitted = false
         if central == nil {
             central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
-        } else if central?.state == .poweredOn {
-            onStateChange?(.scanning)
-            central?.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+            return
+        }
+        if central?.state == .poweredOn {
+            connectToAvailableOrScan()
         }
     }
 
     func stop() {
         isExercising = false
+        wantsConnection = false
+        availableEmitted = false
         if let p = peripheral { central?.cancelPeripheralConnection(p) }
         central?.stopScan()
         peripheral = nil
+        onStateChange?(.idle)
+    }
+
+    // MARK: - Discovery helpers
+
+    /// Standby discovery: surface availability via `retrieveConnectedPeripherals` first,
+    /// fall back to scanning. Never calls `connect`.
+    private func beginDiscovery() {
+        guard let central, central.state == .poweredOn else { return }
+        let connected = central.retrieveConnectedPeripherals(withServices: [hrServiceUUID])
+        if let p = connected.first {
+            self.peripheral = p
+            availableEmitted = true
+            onStateChange?(.available)
+            return
+        }
+        onStateChange?(.scanning)
+        central.scanForPeripherals(
+            withServices: [hrServiceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
+        )
+    }
+
+    /// Exercise-start discovery: prefer a system-connected HR peripheral, then a peripheral
+    /// already discovered in standby, then a fresh scan that auto-connects on discover.
+    private func connectToAvailableOrScan() {
+        guard let central, central.state == .poweredOn else { return }
+        let connected = central.retrieveConnectedPeripherals(withServices: [hrServiceUUID])
+        if let p = connected.first {
+            self.peripheral = p
+            central.stopScan()
+            onStateChange?(.connecting)
+            central.connect(p, options: nil)
+            return
+        }
+        if let p = peripheral {
+            central.stopScan()
+            onStateChange?(.connecting)
+            central.connect(p, options: nil)
+            return
+        }
+        onStateChange?(.scanning)
+        central.scanForPeripherals(
+            withServices: [hrServiceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: true]
+        )
     }
 }
 
@@ -67,18 +130,25 @@ final class BLEHeartRateService: NSObject {
 extension BLEHeartRateService: CBCentralManagerDelegate {
 
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == .poweredOn {
-            onStateChange?(.scanning)
-            central.scanForPeripherals(withServices: [hrServiceUUID], options: nil)
+        guard central.state == .poweredOn else { return }
+        if wantsConnection {
+            connectToAvailableOrScan()
+        } else {
+            beginDiscovery()
         }
     }
 
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         self.peripheral = peripheral
-        central.stopScan()
-        onStateChange?(.connecting)
-        central.connect(peripheral, options: nil)
+        if wantsConnection {
+            central.stopScan()
+            onStateChange?(.connecting)
+            central.connect(peripheral, options: nil)
+        } else if !availableEmitted {
+            availableEmitted = true
+            onStateChange?(.available)
+        }
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -89,20 +159,20 @@ extension BLEHeartRateService: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         onStateChange?(.disconnected)
+        self.peripheral = nil
+        if wantsConnection {
+            connectToAvailableOrScan()
+        }
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         onStateChange?(.disconnected)
-        if isExercising {
-            // Auto-reconnect during exercise
-            if let p = self.peripheral {
-                onStateChange?(.connecting)
-                central.connect(p, options: nil)
-            }
-        } else {
-            // Return to scanning in standby
-            returnToScanning()
+        if isExercising, wantsConnection {
+            onStateChange?(.connecting)
+            central.connect(peripheral, options: nil)
         }
+        // Else: returnToScanning() (if it triggered this disconnect) already restarted discovery.
+        // Do NOT re-enter returnToScanning() here — it caused duplicate scan sessions.
     }
 }
 

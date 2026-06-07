@@ -110,6 +110,7 @@ final class ExerciseViewModel: ObservableObject {
                 guard let self else { return }
                 switch state {
                 case .scanning:     self.bleStatus = "Scanning for HR monitor…"
+                case .available:    self.bleStatus = "HR monitor available"
                 case .connecting:   self.bleStatus = "Connecting…"
                 case .connected:    self.bleStatus = "HR monitor connected"
                 case .disconnected:
@@ -145,6 +146,9 @@ final class ExerciseViewModel: ObservableObject {
     var bleSourceStatus: (message: String, isReady: Bool) {
         if hrSource == .ble || bleStatus == "HR monitor connected" {
             return ("Bluetooth HR monitor connected", true)
+        }
+        if bleStatus == "HR monitor available" {
+            return ("Bluetooth HR monitor available", true)
         }
         if bleStatus == "Connecting…" {
             return ("Connecting to HR monitor…", false)
@@ -186,7 +190,7 @@ final class ExerciseViewModel: ObservableObject {
         workoutManager.beginExercise()
         audioService.startSilentLoop()
 
-        bleService.isExercising = true
+        bleService.start()
 
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 150_000_000)
