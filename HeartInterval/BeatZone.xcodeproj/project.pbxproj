@@ -22,6 +22,8 @@
 		A013 /* BLEHeartRateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* BLEHeartRateService.swift */; };
 		A014 /* HRRangeSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* HRRangeSlider.swift */; };
 		A015 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* SplashView.swift */; };
+		A016 /* SessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* SessionSummary.swift */; };
+		A017 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* SummaryView.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 		T002 /* ExerciseViewModelHRSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFHR /* ExerciseViewModelHRSourceTests.swift */; };
 /* End PBXBuildFile section */
@@ -54,6 +56,8 @@
 		F015 /* BLEHeartRateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BLEHeartRateService.swift; sourceTree = "<group>"; };
 		F016 /* HRRangeSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRRangeSlider.swift; sourceTree = "<group>"; };
 		F017 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		F018 /* SessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSummary.swift; sourceTree = "<group>"; };
+		F019 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
 		TFHR /* ExerciseViewModelHRSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelHRSourceTests.swift; sourceTree = "<group>"; };
@@ -116,6 +120,8 @@
 				F015 /* BLEHeartRateService.swift */,
 				F016 /* HRRangeSlider.swift */,
 				F017 /* SplashView.swift */,
+				F018 /* SessionSummary.swift */,
+				F019 /* SummaryView.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -257,6 +263,8 @@
 				A013 /* BLEHeartRateService.swift in Sources */,
 				A014 /* HRRangeSlider.swift in Sources */,
 				A015 /* SplashView.swift in Sources */,
+				A016 /* SessionSummary.swift in Sources */,
+				A017 /* SummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

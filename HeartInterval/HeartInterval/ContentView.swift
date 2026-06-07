@@ -23,6 +23,9 @@ struct ContentView: View {
             case .paused:
                 PausedView(viewModel: viewModel)
                     .transition(.opacity)
+            case .summary(let summary):
+                SummaryView(viewModel: viewModel, summary: summary)
+                    .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.25), value: viewModel.appState)

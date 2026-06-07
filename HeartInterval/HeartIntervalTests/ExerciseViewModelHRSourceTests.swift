@@ -4,7 +4,6 @@ import XCTest
 // MARK: - Spy
 
 final class SpyHealthKitService: HealthKitServicing {
-    var authorized = false
     var authorizationResult = true
     var recentSampleResult: Double? = nil
     var observingSince: Date?
@@ -15,7 +14,6 @@ final class SpyHealthKitService: HealthKitServicing {
 
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
         requestAuthCalls += 1
-        authorized = authorizationResult
         completion(authorizationResult)
     }
 
@@ -26,11 +24,8 @@ final class SpyHealthKitService: HealthKitServicing {
 
     func fetchRecentSample(within seconds: TimeInterval, completion: @escaping (Double?) -> Void) {
         recentSampleCalls += 1
-        // Synchronous in tests — deterministic and avoids RunLoop-vs-Task pumping flake.
         completion(recentSampleResult)
     }
-
-    func isAuthorized() -> Bool { authorized }
 
     func stopObservingHeartRate() { stopObservingCalls += 1 }
 }
@@ -119,26 +114,15 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
     // MARK: - watchSourceStatus
     // =========================================================================
 
-    func test_watchStatus_notAuthorized_emptyRow() {
-        let hk = SpyHealthKitService()
-        hk.authorized = false
-        let vm = makeVM(hk: hk)
-        XCTAssertEqual(vm.watchSourceStatus.message, "")
-    }
-
-    func test_watchStatus_authorizedNoLiveSample() {
-        let hk = SpyHealthKitService()
-        hk.authorized = true
-        let vm = makeVM(hk: hk)
+    func test_watchStatus_noLiveSample_emptyRow() {
+        let vm = makeVM()
         vm.standbyWatchBPM = nil
-        XCTAssertTrue(vm.watchSourceStatus.message.contains("start a workout"))
+        XCTAssertEqual(vm.watchSourceStatus.message, "")
         XCTAssertFalse(vm.watchSourceStatus.isReady)
     }
 
-    func test_watchStatus_authorizedWithLiveSample() {
-        let hk = SpyHealthKitService()
-        hk.authorized = true
-        let vm = makeVM(hk: hk)
+    func test_watchStatus_liveSample() {
+        let vm = makeVM()
         vm.standbyWatchBPM = 132.4
         XCTAssertTrue(vm.watchSourceStatus.message.contains("132 bpm"),
                       "Got: \(vm.watchSourceStatus.message)")
@@ -146,20 +130,14 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
     }
 
     func test_watchStatus_bpmRoundsCorrectly() {
-        let hk = SpyHealthKitService()
-        hk.authorized = true
-        let vm = makeVM(hk: hk)
+        let vm = makeVM()
         vm.standbyWatchBPM = 132.6
         XCTAssertTrue(vm.watchSourceStatus.message.contains("133 bpm"),
                       "Got: \(vm.watchSourceStatus.message)")
     }
 
-    func test_watchStatus_authorizedZeroBPM_documentsBehavior() {
-        // Documents current behaviour: 0 still flips to streaming/green.
-        // If undesired, change watchSourceStatus to treat 0 as nil.
-        let hk = SpyHealthKitService()
-        hk.authorized = true
-        let vm = makeVM(hk: hk)
+    func test_watchStatus_zeroBPM_documentsBehavior() {
+        let vm = makeVM()
         vm.standbyWatchBPM = 0
         XCTAssertTrue(vm.watchSourceStatus.isReady)
         XCTAssertTrue(vm.watchSourceStatus.message.contains("0 bpm"))
@@ -170,9 +148,7 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
     // =========================================================================
 
     func test_instruction_visibleWhenNeitherReady() {
-        let hk = SpyHealthKitService()
-        hk.authorized = false
-        let vm = makeVM(hk: hk)
+        let vm = makeVM()
         XCTAssertTrue(vm.shouldShowSourceInstruction)
     }
 
@@ -183,9 +159,7 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
     }
 
     func test_instruction_hiddenWhenWatchStreaming() {
-        let hk = SpyHealthKitService()
-        hk.authorized = true
-        let vm = makeVM(hk: hk)
+        let vm = makeVM()
         vm.standbyWatchBPM = 120
         XCTAssertFalse(vm.shouldShowSourceInstruction)
     }
@@ -240,15 +214,25 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
                        "Standby poll must not fire during exercise")
     }
 
-    func test_endExercise_resumesStandbyPoll() {
+    func test_endExercise_transitionsToSummary() {
+        let vm = makeVM()
+        vm.startExercise()
+        vm.endExercise()
+        if case .summary = vm.appState { } else {
+            XCTFail("endExercise should transition to .summary, not .standby. Got: \(vm.appState)")
+        }
+    }
+
+    func test_dismissSummary_resumesStandbyPoll() {
         let hk = SpyHealthKitService()
         let vm = makeVM(hk: hk)
         vm.startExercise()
-        let callsAfterStart = hk.recentSampleCalls
-
         vm.endExercise()
-        wait(for: hk.recentSampleCalls > callsAfterStart, timeout: 2.5,
-             "endExercise should restart the standby poll")
+        let callsAfterEnd = hk.recentSampleCalls
+
+        vm.dismissSummary()
+        wait(for: hk.recentSampleCalls > callsAfterEnd, timeout: 2.5,
+             "dismissSummary should restart the standby poll")
     }
 
     // =========================================================================
@@ -270,15 +254,14 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
         XCTAssertLessThanOrEqual(since.timeIntervalSince1970, after.timeIntervalSince1970 + 0.01)
     }
 
-    func test_startExercise_doesNotInvokeObserverWhenAuthDenied() {
+    func test_startExercise_startsObserverEvenWhenAuthDenied() {
         let hk = SpyHealthKitService()
         hk.authorizationResult = false
         let vm = makeVM(hk: hk)
         vm.startExercise()
-        // Give the 150ms task time to run.
         RunLoop.current.run(until: Date().addingTimeInterval(0.4))
-        XCTAssertNil(hk.observingSince,
-                     "Observer must not be started when HealthKit auth is denied")
+        XCTAssertNotNil(hk.observingSince,
+                        "Observer should always start — queries return no data if auth denied")
     }
 
     func test_endExercise_callsStopObserving() {

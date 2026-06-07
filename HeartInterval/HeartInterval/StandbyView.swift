@@ -57,6 +57,7 @@ struct StandbyView: View {
                         options: summaryOptions,
                         selected: $viewModel.summaryInterval
                     )
+                    WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
@@ -89,6 +90,35 @@ private struct StatusRow: View {
         Text(message)
             .font(.footnote)
             .foregroundColor(isReady ? .green.opacity(0.8) : .orange.opacity(0.7))
+    }
+}
+
+// MARK: - Workout type picker
+
+private struct WorkoutTypePickerRow: View {
+    @Binding var selected: WorkoutActivityType
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Workout type")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.45))
+
+            HStack(spacing: 6) {
+                ForEach(WorkoutActivityType.allCases, id: \.rawValue) { type in
+                    Button(action: { selected = type }) {
+                        Text(type.label)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .background(selected == type ? Color.blue : Color.white.opacity(0.08))
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+        }
     }
 }
 
