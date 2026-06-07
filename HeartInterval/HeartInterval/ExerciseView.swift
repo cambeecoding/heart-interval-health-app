@@ -39,19 +39,25 @@ struct ExerciseView: View {
 
                     // ── Heart rate ────────────────────────────────────────
                     if viewModel.currentHR == nil {
-                        VStack(spacing: 10) {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white.opacity(0.5)))
-                            Text("Waiting for heart rate…")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.45))
-                            Text("Garmin: enable Broadcast in Activity\nApple Watch: start a workout")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.25))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 32)
+                        if viewModel.hrSourceTimedOut {
+                            NoHRWarning()
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 12)
+                        } else {
+                            VStack(spacing: 10) {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white.opacity(0.5)))
+                                Text("Waiting for heart rate…")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.45))
+                                Text("Garmin: enable Broadcast in Activity\nApple Watch: start a workout")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.25))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 32)
+                            }
+                            .padding(.vertical, 12)
                         }
-                        .padding(.vertical, 12)
                     } else {
                         let hr = viewModel.currentHR ?? 0
 
@@ -304,5 +310,66 @@ private struct HRSpeedometer: View {
                    clockwise: false)
         context.stroke(arc, with: .color(color),
                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+    }
+}
+
+// MARK: - No HR Warning
+
+private struct NoHRWarning: View {
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 28))
+                .foregroundColor(.orange.opacity(0.9))
+
+            Text("Heart rate not detected")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            VStack(alignment: .leading, spacing: 8) {
+                checkRow(icon: "applewatch", text: "Apple Watch: start a workout, and make sure BeatZone has permission to read heart rate in Apple Health.")
+                checkRow(icon: "antenna.radiowaves.left.and.right", text: "Garmin / Bluetooth HR: enable Broadcast HR (or HR-to-ANT/BLE) on the device.")
+            }
+            .font(.caption)
+            .foregroundColor(.white.opacity(0.6))
+            .fixedSize(horizontal: false, vertical: true)
+
+            Button(action: {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }) {
+                Text("Open App Settings")
+                    .font(.subheadline.weight(.medium))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 44)
+                    .background(Color.orange.opacity(0.85))
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding(.top, 4)
+
+            Text("Health & Bluetooth permissions are managed here")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.35))
+        }
+        .padding(20)
+        .background(Color.white.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    private func checkRow(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.white.opacity(0.5))
+                .frame(width: 18, alignment: .center)
+            Text(text)
+                .multilineTextAlignment(.leading)
+        }
     }
 }

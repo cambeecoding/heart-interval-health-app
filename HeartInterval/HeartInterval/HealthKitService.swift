@@ -25,6 +25,9 @@ final class HealthKitService: HealthKitServicing {
 
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
+            #if DEBUG
+            print("[BeatZone HK] HealthKit not available on this device")
+            #endif
             completion(false)
             return
         }
@@ -32,7 +35,13 @@ final class HealthKitService: HealthKitServicing {
             HKObjectType.workoutType(),
             HKQuantityType(.heartRate)
         ]
-        store.requestAuthorization(toShare: writeTypes, read: [hrType]) { granted, _ in
+        store.requestAuthorization(toShare: writeTypes, read: [hrType]) { granted, error in
+            #if DEBUG
+            if let error {
+                print("[BeatZone HK] requestAuthorization error: \(error.localizedDescription)")
+            }
+            print("[BeatZone HK] requestAuthorization returned granted=\(granted) (note: 'granted' reflects whether the dialog was presented, NOT whether read was actually granted)")
+            #endif
             DispatchQueue.main.async { completion(granted) }
         }
     }
@@ -42,11 +51,30 @@ final class HealthKitService: HealthKitServicing {
     func startObservingHeartRate(since: Date, handler: @escaping (Double, Date) -> Void) {
         let unit = HKUnit.count().unitDivided(by: .minute())
 
-        store.enableBackgroundDelivery(for: hrType, frequency: .immediate) { _, _ in }
+        #if DEBUG
+        print("[BeatZone HK] startObservingHeartRate since=\(since)")
+        #endif
+
+        store.enableBackgroundDelivery(for: hrType, frequency: .immediate) { success, error in
+            #if DEBUG
+            if let error {
+                print("[BeatZone HK] enableBackgroundDelivery error: \(error.localizedDescription)")
+            } else {
+                print("[BeatZone HK] enableBackgroundDelivery success=\(success)")
+            }
+            #endif
+        }
 
         let observer = HKObserverQuery(sampleType: hrType, predicate: nil) { [weak self] _, completionHandler, error in
+            #if DEBUG
+            if let error {
+                print("[BeatZone HK] Observer query error: \(error.localizedDescription)")
+            } else {
+                print("[BeatZone HK] Observer query fired")
+            }
+            #endif
             guard error == nil else { completionHandler(); return }
-            self?.fetchLatestSample(since: since, unit: unit, handler: handler)
+            self?.fetchLatestSample(since: since, unit: unit, source: "observer", handler: handler)
             completionHandler()
         }
         store.execute(observer)
@@ -54,20 +82,34 @@ final class HealthKitService: HealthKitServicing {
 
         // 5-second polling fallback for Garmin's inconsistent batch writes
         let timer = Timer(timeInterval: 5, repeats: true) { [weak self] _ in
-            self?.fetchLatestSample(since: since, unit: unit, handler: handler)
+            self?.fetchLatestSample(since: since, unit: unit, source: "poll", handler: handler)
         }
         RunLoop.main.add(timer, forMode: .common)
         pollTimer = timer
 
-        fetchLatestSample(since: since, unit: unit, handler: handler)
+        fetchLatestSample(since: since, unit: unit, source: "initial", handler: handler)
     }
 
-    private func fetchLatestSample(since: Date, unit: HKUnit, handler: @escaping (Double, Date) -> Void) {
+    private func fetchLatestSample(since: Date, unit: HKUnit, source: String,
+                                   handler: @escaping (Double, Date) -> Void) {
         let predicate = HKQuery.predicateForSamples(withStart: since, end: nil, options: [])
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        let query = HKSampleQuery(sampleType: hrType, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
-            guard let sample = samples?.first as? HKQuantitySample else { return }
+        let query = HKSampleQuery(sampleType: hrType, predicate: predicate, limit: 1, sortDescriptors: [sort]) { _, samples, error in
+            #if DEBUG
+            if let error {
+                print("[BeatZone HK] fetchLatestSample(\(source)) error: \(error.localizedDescription)")
+            }
+            #endif
+            guard let sample = samples?.first as? HKQuantitySample else {
+                #if DEBUG
+                print("[BeatZone HK] fetchLatestSample(\(source)) returned no samples since=\(since)")
+                #endif
+                return
+            }
             let bpm = sample.quantity.doubleValue(for: unit)
+            #if DEBUG
+            print("[BeatZone HK] fetchLatestSample(\(source)) → bpm=\(bpm) endDate=\(sample.endDate) source=\(sample.sourceRevision.source.name)")
+            #endif
             handler(bpm, sample.endDate)
         }
         store.execute(query)

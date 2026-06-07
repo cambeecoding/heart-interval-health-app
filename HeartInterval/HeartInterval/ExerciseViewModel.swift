@@ -30,6 +30,9 @@ final class ExerciseViewModel: ObservableObject {
     /// Latest HR sample seen from HealthKit while on the standby screen.
     /// nil = no recent sample (Watch/device not currently streaming).
     @Published var standbyWatchBPM: Double?  = nil
+    /// True if no HR sample has arrived within the timeout after starting exercise.
+    /// Surfaces a warning + Settings deep-link in ExerciseView.
+    @Published var hrSourceTimedOut: Bool    = false
 
     // MARK: - UserDefaults-backed workout type
     var selectedActivityType: WorkoutActivityType {
@@ -86,6 +89,9 @@ final class ExerciseViewModel: ObservableObject {
     private var speakTimer:   Timer?
     private var summaryTimer: Timer?
     private var standbyPollTimer: Timer?
+    private var noHRTimeoutTimer: Timer?
+    /// Seconds to wait before warning the user that no HR has been received.
+    private let noHRTimeoutSeconds: TimeInterval = 20
     #if targetEnvironment(simulator)
     private var mockHRTimer: Timer?
     private var mockHRIndex = 0
@@ -202,6 +208,7 @@ final class ExerciseViewModel: ObservableObject {
         secondsSinceLastHR = nil
         lastSampleDate     = nil
         hrSource           = .none
+        hrSourceTimedOut   = false
 
         stopStandbyPoll()
         appState = .starting
@@ -217,12 +224,23 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func requestHealthKitAndBegin() {
-        let since = Date()   // anchor: reject any sample written before exercise began
-        healthKitService.requestAuthorization { [weak self] _ in
+        // Relaxed by 10s: defends against clock skew / sync lag where the Watch
+        // timestamps a sample fractions of a second before the auth callback fires.
+        // Still rules out genuinely stale samples (the original "frozen 61 bpm" bug
+        // involved samples from hours ago).
+        let since = Date().addingTimeInterval(-10)
+        #if DEBUG
+        print("[BeatZone HK] requestAuthorization called, since=\(since)")
+        #endif
+        healthKitService.requestAuthorization { [weak self] granted in
             guard let self else { return }
+            #if DEBUG
+            print("[BeatZone HK] requestAuthorization completed, granted=\(granted)")
+            #endif
             self.appState = .exercising
             self.audioService.speak("Starting exercise.")
             self.startTimers()
+            self.startNoHRTimeout()
             self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
                 Task { @MainActor [weak self] in
                     guard let self, self.hrSource != .ble else { return }
@@ -230,6 +248,23 @@ final class ExerciseViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private func startNoHRTimeout() {
+        noHRTimeoutTimer?.invalidate()
+        let t = Timer(timeInterval: noHRTimeoutSeconds, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if self.currentHR == nil && self.hrSource == .none && self.appState == .exercising {
+                    #if DEBUG
+                    print("[BeatZone HK] No HR sample received after \(self.noHRTimeoutSeconds)s — surfacing warning")
+                    #endif
+                    self.hrSourceTimedOut = true
+                }
+            }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        noHRTimeoutTimer = t
     }
 
     func pauseExercise() {
@@ -268,6 +303,7 @@ final class ExerciseViewModel: ObservableObject {
         elapsedSeconds     = 0
         secondsSinceLastHR = nil
         hrSource           = .none
+        hrSourceTimedOut   = false
         isAboveMax         = false
         isBelowMin         = false
         isSaving           = false
@@ -327,6 +363,9 @@ final class ExerciseViewModel: ObservableObject {
         }
         hrSource           = source
         secondsSinceLastHR = 0
+        hrSourceTimedOut   = false
+        noHRTimeoutTimer?.invalidate()
+        noHRTimeoutTimer   = nil
         allSamples.append(HRSample(bpm: bpm, date: date))
         currentHR  = Int(bpm.rounded())
         totalAvgHR = average(of: allSamples.map(\.bpm))
@@ -403,11 +442,12 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func stopTimers() {
-        clockTimer?.invalidate();   clockTimer = nil
-        speakTimer?.invalidate();   speakTimer = nil
-        summaryTimer?.invalidate(); summaryTimer = nil
+        clockTimer?.invalidate();      clockTimer = nil
+        speakTimer?.invalidate();      speakTimer = nil
+        summaryTimer?.invalidate();    summaryTimer = nil
+        noHRTimeoutTimer?.invalidate(); noHRTimeoutTimer = nil
         #if targetEnvironment(simulator)
-        mockHRTimer?.invalidate();  mockHRTimer = nil
+        mockHRTimer?.invalidate();     mockHRTimer = nil
         #endif
     }
 
