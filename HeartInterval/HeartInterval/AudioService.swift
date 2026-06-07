@@ -19,6 +19,8 @@ final class AudioService: NSObject, AudioServiceProtocol {
     /// Incremented before each speak; decremented in didFinish.
     /// Only releases ducking when it reaches zero.
     private var activeSpeechCount = 0
+    private var resolvedVoice: AVSpeechSynthesisVoice?
+    private var voiceResolved = false
 
     override init() {
         super.init()
@@ -91,11 +93,50 @@ final class AudioService: NSObject, AudioServiceProtocol {
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate   = AVSpeechUtteranceDefaultSpeechRate
         utterance.volume = 1.0
-        utterance.voice = AVSpeechSynthesisVoice(identifier: "com.apple.voice.enhanced.en-GB.Serena")
-                       ?? AVSpeechSynthesisVoice(identifier: "com.apple.ttsbundle.siri_Nicky_en-US_premium")
-                       ?? AVSpeechSynthesisVoice(language: Locale.current.identifier.replacingOccurrences(of: "_", with: "-"))
-                       ?? AVSpeechSynthesisVoice(language: "en-US")
+        utterance.voice  = resolveVoice()
         synthesizer.speak(utterance)
+    }
+
+    private func resolveVoice() -> AVSpeechSynthesisVoice? {
+        if voiceResolved { return resolvedVoice }
+        voiceResolved = true
+
+        if let v = AVSpeechSynthesisVoice(identifier: "com.apple.voice.enhanced.en-GB.Serena") {
+            resolvedVoice = v; return v
+        }
+
+        let lang = Locale.current.language.languageCode?.identifier ?? "en"
+        let voices = AVSpeechSynthesisVoice.speechVoices()
+
+        if let v = voices.first(where: {
+            $0.identifier.lowercased().contains("siri") && $0.language.hasPrefix(lang)
+        }) {
+            resolvedVoice = v; return v
+        }
+
+        if let v = voices.first(where: {
+            let id = $0.identifier.lowercased()
+            return (id.contains("premium") || id.contains("enhanced")) && $0.language.hasPrefix(lang)
+        }) {
+            resolvedVoice = v; return v
+        }
+
+        let localeId = Locale.current.identifier.replacingOccurrences(of: "_", with: "-")
+        if let v = AVSpeechSynthesisVoice(language: localeId) {
+            resolvedVoice = v; return v
+        }
+
+        resolvedVoice = AVSpeechSynthesisVoice(language: "en-US")
+
+        #if DEBUG
+        if let v = resolvedVoice {
+            print("[BeatZone Voice] Selected: \(v.name) (\(v.identifier))")
+        } else {
+            print("[BeatZone Voice] No voice resolved — system will use default")
+        }
+        #endif
+
+        return resolvedVoice
     }
 }
 
