@@ -37,10 +37,12 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeVM(hk: SpyHealthKitService = SpyHealthKitService(),
+    private func makeVM(hk: SpyHealthKitService? = nil,
+                        wc: SpyWatchConnectivityService? = nil,
                         pollInterval: TimeInterval = 0.05) -> ExerciseViewModel {
         ExerciseViewModel(audioService: SpyAudioService(),
-                          healthKitService: hk,
+                          healthKitService: hk ?? SpyHealthKitService(),
+                          watchConnectivityService: wc ?? SpyWatchConnectivityService(),
                           standbyPollInterval: pollInterval)
     }
 
@@ -250,7 +252,8 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
              "startObservingHeartRate should be invoked after auth grant")
         let since = hk.observingSince!
         let after = Date()
-        XCTAssertGreaterThanOrEqual(since.timeIntervalSince1970, before.timeIntervalSince1970 - 0.01)
+        // `since` is intentionally backdated by ~10s to absorb Watch sample clock skew.
+        XCTAssertGreaterThanOrEqual(since.timeIntervalSince1970, before.timeIntervalSince1970 - 30)
         XCTAssertLessThanOrEqual(since.timeIntervalSince1970, after.timeIntervalSince1970 + 0.01)
     }
 
@@ -303,17 +306,20 @@ final class ExerciseViewModelHRSourceTests: XCTestCase {
     // MARK: - Frozen-HR regression: `since:` anchor
     // =========================================================================
 
-    func test_observerSince_isAtOrAfterStartCall() {
-        // Direct regression for the frozen-HR bug: the `since:` value passed to
-        // startObservingHeartRate must be >= the moment the user pressed START,
-        // so pre-exercise HealthKit samples (e.g. stale 61 bpm) cannot be returned.
+    func test_observerSince_isWithinReasonableWindow() {
+        // Regression for the frozen-HR bug: the `since:` value must not be so old that
+        // pre-exercise stale samples (e.g. 61 bpm from hours ago) can be returned.
+        // A small backward window (~10s) is permitted to absorb clock skew between the
+        // Apple Watch sample timestamps and the iPhone's exercise-start moment.
         let hk = SpyHealthKitService()
         let vm = makeVM(hk: hk)
         let pressStart = Date()
         vm.startExercise()
         wait(for: hk.observingSince != nil, timeout: 1.0)
-        XCTAssertGreaterThanOrEqual(hk.observingSince!.timeIntervalSince1970,
-                                    pressStart.timeIntervalSince1970 - 0.01,
-                                    "`since:` must not be earlier than the start of the exercise")
+        let delta = pressStart.timeIntervalSince1970 - hk.observingSince!.timeIntervalSince1970
+        XCTAssertGreaterThanOrEqual(delta, -0.5,
+                                    "`since:` must not be in the future relative to the start of the exercise")
+        XCTAssertLessThanOrEqual(delta, 30,
+                                 "`since:` must be within 30s of the start of the exercise to avoid frozen-HR regression")
     }
 }
