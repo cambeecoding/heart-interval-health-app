@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeatZone Interval Mode Mockups</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a2e;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    text-align: center;
+    font-weight: 300;
+    font-size: 28px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 48px;
+  }
+
+  .screen-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .screen-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .screen-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* ─── iPhone Frame ─── */
+  .phone {
+    width: 270px;
+    height: 560px;
+    background: #000;
+    border-radius: 36px;
+    border: 3px solid #333;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notch {
+    width: 110px;
+    height: 26px;
+    background: #000;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+    border: 2px solid #222;
+    border-top: none;
+  }
+
+  .phone-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px;
+    overflow: hidden;
+  }
+
+  .phone-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .phone-scroll::-webkit-scrollbar { display: none; }
+
+  /* ─── Apple Watch Frame ─── */
+  .watch {
+    width: 156px;
+    height: 186px;
+    background: #000;
+    border-radius: 34px;
+    border: 3px solid #444;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .watch-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 10px 8px;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Crown */
+  .watch-container-wrap {
+    position: relative;
+  }
+
+  .watch-crown {
+    position: absolute;
+    right: -8px;
+    top: 40px;
+    width: 6px;
+    height: 24px;
+    background: #555;
+    border-radius: 3px;
+  }
+
+  .watch-side-btn {
+    position: absolute;
+    right: -7px;
+    top: 76px;
+    width: 5px;
+    height: 14px;
+    background: #444;
+    border-radius: 2px;
+  }
+
+  /* ─── Mode Toggle ─── */
+  .mode-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 3px;
+    margin: 10px 20px 0;
+  }
+
+  .mode-toggle-btn {
+    flex: 1;
+    padding: 7px 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .mode-toggle-btn.active-zone { background: #007AFF; color: #fff; }
+  .mode-toggle-btn.active-interval { background: #FF6B35; color: #fff; }
+
+  /* Watch mode toggle */
+  .watch-mode-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 2px;
+    margin-bottom: 6px;
+    width: 100%;
+  }
+
+  .watch-mode-btn {
+    flex: 1;
+    padding: 4px 0;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .watch-mode-btn.active-zone { background: #007AFF; color: #fff; }
+  .watch-mode-btn.active-interval { background: #FF6B35; color: #fff; }
+
+  /* ─── Common ─── */
+  .app-title {
+    font-size: 22px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  .source-status {
+    font-size: 11px;
+    color: #4cd964;
+    text-align: center;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  .config-section { margin-top: 12px; }
+
+  .config-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 5px;
+  }
+
+  .chip-row { display: flex; gap: 4px; }
+
+  .chip {
+    flex: 1;
+    padding: 6px 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.08);
+    border-radius: 7px;
+    color: #fff;
+  }
+
+  .chip.selected { background: #007AFF; }
+  .chip.selected-orange { background: #FF6B35; }
+
+  /* ─── Interval Config ─── */
+  .time-config {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .time-config-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+  .time-config-value { display: flex; align-items: center; gap: 10px; }
+
+  .stepper-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .time-value {
+    font-size: 17px;
+    font-weight: 300;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .time-unit { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+  .preset-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .preset-chip {
+    padding: 5px 8px;
+    font-size: 9px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .preset-chip.active {
+    background: rgba(255,107,53,0.15);
+    border-color: rgba(255,107,53,0.4);
+    color: #FF6B35;
+  }
+
+  /* ─── Haptics Toggle ─── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .toggle-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .toggle-sublabel {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 1px;
+  }
+
+  .toggle-switch {
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    background: #4cd964;
+    position: relative;
+  }
+
+  .toggle-switch.off { background: rgba(255,255,255,0.15); }
+
+  .toggle-knob {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+  }
+
+  .toggle-switch.off .toggle-knob { right: auto; left: 2px; }
+
+  /* ─── Start Buttons ─── */
+  .start-btn {
+    width: 150px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 auto;
+    margin-top: auto;
+    margin-bottom: 20px;
+  }
+
+  .start-btn.blue { background: #007AFF; }
+  .start-btn.orange { background: #FF6B35; }
+
+  /* ─── Watch Start Button ─── */
+  .watch-start-btn {
+    width: 100%;
+    padding: 8px 0;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+
+  /* ─── Phase Badge ─── */
+  .phase-badge {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-top: 8px;
+    padding: 5px 18px;
+    border-radius: 8px;
+    display: inline-block;
+    align-self: center;
+  }
+
+  .phase-work { background: rgba(76,217,100,0.15); color: #4cd964; }
+  .phase-rest { background: rgba(90,200,250,0.15); color: #5ac8fa; }
+
+  .round-counter {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+
+  /* ─── Countdown ─── */
+  .countdown-timer { text-align: center; margin-top: 8px; }
+
+  .countdown-value {
+    font-size: 72px;
+    font-weight: 200;
+    line-height: 1;
+  }
+
+  .countdown-value.work-color { color: #4cd964; }
+  .countdown-value.rest-color { color: #5ac8fa; }
+
+  .countdown-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+  }
+
+  .countdown-progress {
+    width: 180px;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    margin: 8px auto 0;
+    overflow: hidden;
+  }
+
+  .countdown-progress-fill { height: 100%; border-radius: 2px; }
+  .countdown-progress-fill.work { background: #4cd964; }
+  .countdown-progress-fill.rest { background: #5ac8fa; }
+
+  /* ─── Round Dots ─── */
+  .round-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .round-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .round-dot.completed { background: #4cd964; }
+  .round-dot.current { background: #FF6B35; }
+  .round-dot.rest-current { background: #5ac8fa; }
+
+  /* Watch round dots */
+  .watch-dots {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .watch-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+  }
+
+  .watch-dot.completed { background: #4cd964; }
+  .watch-dot.current { background: #FF6B35; }
+  .watch-dot.rest-current { background: #5ac8fa; }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 10px 20px;
+  }
+
+  /* ─── HR Display ─── */
+  .hr-display { text-align: center; margin-top: 2px; }
+
+  .hr-value { font-size: 38px; font-weight: 200; }
+  .hr-unit { font-size: 10px; color: rgba(255,255,255,0.3); }
+
+  .hr-avg {
+    font-size: 12px;
+    font-weight: 300;
+    color: rgba(255,204,0,0.7);
+    margin-top: 1px;
+  }
+
+  .hr-source-badge {
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .elapsed-small {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 6px;
+  }
+
+  /* ─── Bottom Buttons ─── */
+  .bottom-btn {
+    margin-top: auto;
+    margin-bottom: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 14px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
+  .bottom-btn.pause { background: #FF9500; }
+  .bottom-btn.skip {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    padding: 8px;
+    margin-bottom: 4px;
+  }
+
+  /* ─── Watch Exercise ─── */
+  .watch-phase {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+  }
+
+  .watch-countdown {
+    font-size: 44px;
+    font-weight: 200;
+    line-height: 1;
+  }
+
+  .watch-round-text {
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  .watch-hr {
+    font-size: 18px;
+    font-weight: 300;
+    margin-top: 4px;
+  }
+
+  .watch-hr-label {
+    font-size: 8px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .watch-haptic-indicator {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+  }
+
+  .watch-haptic-indicator span {
+    font-size: 7px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  .haptic-wave {
+    display: flex;
+    gap: 1px;
+    align-items: center;
+  }
+
+  .haptic-bar {
+    width: 2px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 1px;
+  }
+
+  /* ─── Summary ─── */
+  .summary-header { text-align: center; margin-top: 12px; }
+
+  .summary-duration {
+    font-size: 18px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .summary-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+    margin-top: 3px;
+  }
+
+  .summary-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 14px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .stat { text-align: center; }
+  .stat-value { font-size: 20px; font-weight: 300; }
+  .stat-label { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+
+  /* HR graph */
+  .hr-graph-placeholder {
+    margin-top: 12px;
+    height: 90px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .interval-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    opacity: 0.08;
+  }
+
+  .interval-band.work-band { background: #4cd964; }
+  .interval-band.rest-band { background: #5ac8fa; }
+
+  .svg-graph { width: 100%; height: 100%; }
+
+  .graph-legend {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 5px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 8px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .legend-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  /* Round chart */
+  .round-chart { margin-top: 14px; padding: 0 4px; }
+
+  .round-chart-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .round-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 70px;
+  }
+
+  .round-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .round-bar {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    min-height: 3px;
+  }
+
+  .round-bar.peak { background: rgba(76,217,100,0.7); }
+
+  .round-bar-label { font-size: 7px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+  .round-bar-hr { font-size: 7px; color: rgba(255,255,255,0.5); margin-bottom: 1px; }
+
+  /* Recovery card */
+  .insight-card {
+    margin-top: 12px;
+    padding: 9px 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .insight-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .insight-text {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.6;
+  }
+
+  .insight-highlight { color: #4cd964; font-weight: 500; }
+
+  .save-btn {
+    margin-top: 14px;
+    padding: 12px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 14px;
+    background: #007AFF;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .done-btn {
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 8px;
+  }
+
+  /* Section headers */
+  .section-header {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.5);
+    margin: 48px 0 6px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .section-desc {
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 28px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ─── Pairing indicator ─── */
+  .pair-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .pair-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .pair-dash {
+    width: 20px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    border-top: 1px dashed rgba(255,255,255,0.15);
+  }
+
+  .pair-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+  }
+
+  /* Watch summary */
+  .watch-summary-stat {
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .watch-summary-value {
+    font-size: 22px;
+    font-weight: 300;
+  }
+
+  .watch-summary-label {
+    font-size: 8px;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .watch-summary-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Audio cues */
+  .cue-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+
+  .cue-time {
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    min-width: 36px;
+  }
+
+  .cue-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .cue-haptic {
+    margin-left: auto;
+    font-size: 8px;
+    color: rgba(255,255,255,0.25);
+    padding: 2px 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<h1>BEATZONE</h1>
+<p class="subtitle">Interval Mode — iPhone + Apple Watch Mockups</p>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 1: Standby -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Standby Screen</div>
+<p class="section-desc">Mode toggle on both devices. Config lives on the phone — Watch receives it and shows a compact summary. Haptics toggle in the interval config.</p>
+
+<div class="screen-row">
+
+  <!-- Phone: Interval Mode Standby -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone — Interval Mode</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="mode-toggle">
+        <div class="mode-toggle-btn">Zone</div>
+        <div class="mode-toggle-btn active-interval">Intervals</div>
+      </div>
+      <div class="phone-content">
+        <div class="app-title">BeatZone</div>
+        <div class="source-status">Apple Watch streaming — 72 bpm</div>
+
+        <div style="margin-top: 10px;">
+          <div class="time-config">
+            <div class="time-config-label">Work</div>
+            <div class="time-config-value">
+              <div class="stepper-btn">−</div>
+              <div><span class="time-value" style="color: #4cd964;">50</span><span class="time-unit">sec</span></div>
+              <div class="stepper-btn">+</div>
+            </div>
+          </div>
+          <div class="time-config">
+            <div class="time-config-label">Rest</div>
+            <div class="time-config-value">
+              <div class="stepper-btn">−</div>
+              <div><span class="time-value" style="color: #5ac8fa;">20</span><span class="time-unit">sec</span></div>
+              <div class="stepper-btn">+</div>
+            </div>
+          </div>
+          <div class="time-config">
+            <div class="time-config-label">Rounds</div>
+            <div class="time-config-value">
+              <div class="stepper-btn">−</div>
+              <div><span class="time-value">9</span></div>
+              <div class="stepper-btn">+</div>
+            </div>
+          </div>
+
+          <!-- Warm-up -->
+          <div class="time-config">
+            <div>
+              <div class="time-config-label">Warm-up</div>
+              <div style="font-size: 8px; color: rgba(255,255,255,0.25); margin-top: 1px;">optional</div>
+            </div>
+            <div class="time-config-value">
+              <div class="stepper-btn">−</div>
+              <div><span class="time-value" style="color: #FF9500;">3</span><span class="time-unit">min</span></div>
+              <div class="stepper-btn">+</div>
+            </div>
+          </div>
+
+          <!-- Haptics toggle -->
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Watch haptics</div>
+              <div class="toggle-sublabel">Tap wrist on phase changes</div>
+            </div>
+            <div class="toggle-switch">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 6px; font-size: 10px; color: rgba(255,255,255,0.3);">
+            Total: <span style="color: rgba(255,255,255,0.5);">13:30</span>
+            <span style="color: rgba(255,255,255,0.2);">(3:00 warm-up + 10:30 intervals)</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <div class="config-label">Presets</div>
+          <div class="preset-chips">
+            <div class="preset-chip">Tabata 20/10</div>
+            <div class="preset-chip">30/30</div>
+            <div class="preset-chip active">PT 50/20</div>
+            <div class="preset-chip">EMOM</div>
+            <div class="preset-chip">Long 3m/1m</div>
+          </div>
+        </div>
+
+        <div class="config-section">
+          <div class="config-label">Workout type</div>
+          <div class="chip-row">
+            <div class="chip">Run</div>
+            <div class="chip">Cycle</div>
+            <div class="chip">Row</div>
+            <div class="chip selected-orange">HIIT</div>
+            <div class="chip">Ski</div>
+            <div class="chip">Other</div>
+          </div>
+        </div>
+
+        <div class="start-btn orange">START</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Interval Standby -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch — Interval</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-mode-toggle">
+            <div class="watch-mode-btn">Zone</div>
+            <div class="watch-mode-btn active-interval">Intervals</div>
+          </div>
+
+          <div style="font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px;">
+            <span style="color: #FF9500;">3m</span> warm-up ·
+            <span style="color: #4cd964;">50s</span> / <span style="color: #5ac8fa;">20s</span> ·
+            <span style="color: rgba(255,255,255,0.6);">9</span> rds
+          </div>
+          <div style="font-size: 8px; color: rgba(255,255,255,0.25); margin-top: 2px;">13:30 total</div>
+
+          <div style="display: flex; align-items: center; gap: 3px; margin-top: 4px;">
+            <div style="width: 5px; height: 5px; border-radius: 50%; background: #4cd964;"></div>
+            <span style="font-size: 8px; color: rgba(255,255,255,0.35);">72 bpm</span>
+          </div>
+
+          <div class="watch-start-btn" style="background: #FF6B35; margin-top: 8px;">Start</div>
+
+          <div style="display: flex; align-items: center; gap: 3px; margin-top: 6px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #4cd964;"></div>
+            <span style="font-size: 7px; color: rgba(255,255,255,0.3);">iPhone connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Zone Standby (for comparison) -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch — Zone</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-mode-toggle">
+            <div class="watch-mode-btn active-zone">Zone</div>
+            <div class="watch-mode-btn">Intervals</div>
+          </div>
+
+          <div style="font-size: 14px; font-weight: 300; color: rgba(255,255,255,0.5); margin-top: 6px;">BeatZone</div>
+
+          <div style="display: flex; align-items: center; gap: 3px; margin-top: 6px;">
+            <div style="width: 5px; height: 5px; border-radius: 50%; background: #4cd964;"></div>
+            <span style="font-size: 8px; color: rgba(255,255,255,0.35);">72 bpm</span>
+          </div>
+
+          <div style="margin-top: 6px; width: 100%; text-align: center;">
+            <div style="font-size: 8px; color: rgba(255,255,255,0.3);">Zone</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 2px;">
+              <span style="font-size: 11px; color: #FF9500;">120</span>
+              <div style="width: 40px; height: 3px; background: linear-gradient(90deg, #FF9500, #4cd964, #ff3b30); border-radius: 2px;"></div>
+              <span style="font-size: 11px; color: #ff3b30;">160</span>
+            </div>
+          </div>
+
+          <div class="watch-start-btn" style="background: #007AFF; margin-top: 8px;">Start</div>
+
+          <div style="display: flex; align-items: center; gap: 3px; margin-top: 6px;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #4cd964;"></div>
+            <span style="font-size: 7px; color: rgba(255,255,255,0.3);">iPhone connected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 1b: Exercise — Warm-up Phase -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Exercise — Warm-up</div>
+<p class="section-desc">Optional warm-up phase before intervals begin. Countdown to first round, HR monitoring, no zone alerts. Audio: "Warm-up. 3 minutes."</p>
+
+<div class="screen-row">
+
+  <!-- Phone: Warm-up -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone — Warm-up</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-content">
+        <div class="phase-badge" style="background: rgba(255,149,0,0.15); color: #FF9500;">WARM UP</div>
+        <div class="round-counter">Intervals start in 1:42</div>
+
+        <div class="countdown-timer">
+          <div class="countdown-value" style="color: #FF9500;">1:42</div>
+          <div class="countdown-label">until first round</div>
+          <div class="countdown-progress">
+            <div class="countdown-progress-fill" style="background: #FF9500; width: 43%;"></div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 10px;">
+          <div style="display: flex; justify-content: center; gap: 6px; align-items: center;">
+            <div style="width: 18px; height: 3px; background: #FF9500; border-radius: 2px;"></div>
+            <div style="font-size: 9px; color: rgba(255,255,255,0.25);">then 9 × 50s/20s</div>
+            <div style="width: 18px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px;"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="hr-display">
+          <div class="hr-source-badge">&#9829; Apple Watch</div>
+          <div class="hr-value" style="color: #FF9500;">118</div>
+          <div class="hr-unit">bpm</div>
+          <div style="font-size: 11px; color: rgba(255,149,0,0.5); margin-top: 3px;">&#8593; warming up</div>
+        </div>
+
+        <div class="elapsed-small">01:18 elapsed</div>
+
+        <div class="bottom-btn skip">SKIP WARM-UP &#8594;</div>
+        <div class="bottom-btn pause">PAUSE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Warm-up -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch — Warm-up</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-phase" style="background: rgba(255,149,0,0.15); color: #FF9500; font-size: 9px;">WARM UP</div>
+          <div class="watch-countdown" style="color: #FF9500;">1:42</div>
+          <div class="watch-round-text">until intervals</div>
+
+          <div style="margin-top: 8px; text-align: center;">
+            <div class="watch-hr" style="color: #FF9500;">118</div>
+            <div class="watch-hr-label">bpm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacer -->
+  <div style="width: 20px;"></div>
+
+  <!-- Phone: Warm-up ending transition -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone — Warm-up Ending</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-content" style="justify-content: center; align-items: center;">
+        <div style="text-align: center;">
+          <div style="font-size: 11px; color: rgba(255,149,0,0.6); letter-spacing: 2px; margin-bottom: 6px;">WARM-UP COMPLETE</div>
+          <div style="font-size: 110px; font-weight: 200; color: #FF6B35; line-height: 1;">3</div>
+          <div style="font-size: 13px; color: rgba(76,217,100,0.7); margin-top: 10px; font-weight: 500;">Round 1 — WORK</div>
+        </div>
+        <div class="round-dots" style="margin-top: 24px;">
+          <div class="round-dot current"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Warm-up ending -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div style="font-size: 7px; color: rgba(255,149,0,0.6); letter-spacing: 2px;">WARM-UP DONE</div>
+          <div style="font-size: 56px; font-weight: 200; color: #FF6B35; line-height: 1; margin-top: 2px;">3</div>
+          <div style="font-size: 9px; color: rgba(76,217,100,0.7); margin-top: 4px; font-weight: 500;">Round 1 — WORK</div>
+          <div class="watch-haptic-indicator" style="margin-top: 6px;">
+            <div class="haptic-wave">
+              <div class="haptic-bar" style="height: 4px;"></div>
+              <div class="haptic-bar" style="height: 7px;"></div>
+              <div class="haptic-bar" style="height: 4px;"></div>
+            </div>
+            <span>tick</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 2: Exercise — Work Phase -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Exercise — Work Phase</div>
+<p class="section-desc">Phone shows full detail. Watch shows the essentials: phase, countdown, round, HR. Haptic fires on phase entry (when enabled).</p>
+
+<div class="screen-row">
+
+  <!-- Phone: Work -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-content">
+        <div class="phase-badge phase-work">WORK</div>
+        <div class="round-counter">Round 4 of 9</div>
+
+        <div class="countdown-timer">
+          <div class="countdown-value work-color">34</div>
+          <div class="countdown-label">seconds remaining</div>
+          <div class="countdown-progress">
+            <div class="countdown-progress-fill work" style="width: 32%;"></div>
+          </div>
+        </div>
+
+        <div class="round-dots">
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot current"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="hr-display">
+          <div class="hr-source-badge">&#9829; Apple Watch</div>
+          <div class="hr-value" style="color: #ff3b30;">168</div>
+          <div class="hr-unit">bpm</div>
+          <div class="hr-avg">avg 152</div>
+        </div>
+
+        <div class="elapsed-small">04:32 elapsed</div>
+
+        <div class="bottom-btn skip">SKIP &#8594;</div>
+        <div class="bottom-btn pause">PAUSE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Work -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-phase phase-work" style="font-size: 9px;">WORK</div>
+          <div class="watch-countdown work-color">34</div>
+          <div class="watch-round-text">Round 4 of 9</div>
+
+          <div class="watch-dots">
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot current"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+          </div>
+
+          <div style="margin-top: 6px; text-align: center;">
+            <div class="watch-hr" style="color: #ff3b30;">168</div>
+            <div class="watch-hr-label">bpm</div>
+          </div>
+
+          <div class="watch-haptic-indicator">
+            <div class="haptic-wave">
+              <div class="haptic-bar" style="height: 3px;"></div>
+              <div class="haptic-bar" style="height: 6px;"></div>
+              <div class="haptic-bar" style="height: 8px;"></div>
+              <div class="haptic-bar" style="height: 6px;"></div>
+              <div class="haptic-bar" style="height: 3px;"></div>
+            </div>
+            <span>tapped</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacer for alignment -->
+  <div style="width: 20px;"></div>
+
+  <!-- Phone: Rest -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-content">
+        <div class="phase-badge phase-rest">REST</div>
+        <div class="round-counter">Rest before round 5</div>
+
+        <div class="countdown-timer">
+          <div class="countdown-value rest-color">12</div>
+          <div class="countdown-label">seconds remaining</div>
+          <div class="countdown-progress">
+            <div class="countdown-progress-fill rest" style="width: 40%;"></div>
+          </div>
+        </div>
+
+        <div class="round-dots">
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot rest-current"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="hr-display">
+          <div class="hr-source-badge">&#9829; Apple Watch</div>
+          <div class="hr-value" style="color: #5ac8fa;">148</div>
+          <div class="hr-unit">bpm</div>
+          <div style="font-size: 11px; color: rgba(90,200,250,0.6); margin-top: 3px;">&#8595; recovering</div>
+        </div>
+
+        <div class="elapsed-small">05:22 elapsed</div>
+
+        <div class="bottom-btn skip">SKIP &#8594;</div>
+        <div class="bottom-btn pause">PAUSE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Rest -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-phase phase-rest" style="font-size: 9px;">REST</div>
+          <div class="watch-countdown rest-color">12</div>
+          <div class="watch-round-text">Rest before round 5</div>
+
+          <div class="watch-dots">
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot rest-current"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+          </div>
+
+          <div style="margin-top: 6px; text-align: center;">
+            <div class="watch-hr" style="color: #5ac8fa;">148</div>
+            <div class="watch-hr-label">&#8595; recovering</div>
+          </div>
+
+          <div class="watch-haptic-indicator">
+            <div class="haptic-wave">
+              <div class="haptic-bar" style="height: 4px;"></div>
+              <div class="haptic-bar" style="height: 3px;"></div>
+              <div class="haptic-bar" style="height: 2px;"></div>
+            </div>
+            <span>tapped</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 3: Countdown Transition -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Phase Transition</div>
+<p class="section-desc">3-2-1 countdown before each phase. Watch shows it large and fires haptic ticks if enabled.</p>
+
+<div class="screen-row">
+
+  <div class="screen-container">
+    <div class="screen-label">iPhone</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-content" style="justify-content: center; align-items: center;">
+        <div style="text-align: center;">
+          <div style="font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 2px; margin-bottom: 6px;">GET READY</div>
+          <div style="font-size: 110px; font-weight: 200; color: #FF6B35; line-height: 1;">3</div>
+          <div style="font-size: 13px; color: rgba(76,217,100,0.7); margin-top: 10px; font-weight: 500;">Round 5 — WORK</div>
+        </div>
+        <div class="round-dots" style="margin-top: 24px;">
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot completed"></div>
+          <div class="round-dot current"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+          <div class="round-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div style="font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 2px;">GET READY</div>
+          <div style="font-size: 56px; font-weight: 200; color: #FF6B35; line-height: 1; margin-top: 2px;">3</div>
+          <div style="font-size: 9px; color: rgba(76,217,100,0.7); margin-top: 4px; font-weight: 500;">Round 5 — WORK</div>
+          <div class="watch-haptic-indicator" style="margin-top: 6px;">
+            <div class="haptic-wave">
+              <div class="haptic-bar" style="height: 4px;"></div>
+              <div class="haptic-bar" style="height: 7px;"></div>
+              <div class="haptic-bar" style="height: 4px;"></div>
+            </div>
+            <span>tick</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 4: Summary -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Session Summary</div>
+<p class="section-desc">Phone shows full analytics. Watch shows a compact glanceable summary. Recovery card shows data only — no opinions.</p>
+
+<div class="screen-row">
+
+  <!-- Phone: Interval Summary -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone — Interval Summary</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="phone-scroll">
+        <div class="phone-content">
+          <div class="summary-header">
+            <div class="summary-duration">10:30</div>
+            <div class="summary-label">INTERVAL SESSION</div>
+            <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 2px;">9 rounds &middot; 50s/20s &middot; HIIT</div>
+          </div>
+
+          <div class="summary-stats">
+            <div class="stat">
+              <div class="stat-value" style="color: #ffcc00;">155</div>
+              <div class="stat-label">avg bpm</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" style="color: #ff3b30;">178</div>
+              <div class="stat-label">peak bpm</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" style="color: #5ac8fa;">18</div>
+              <div class="stat-label">avg recovery</div>
+            </div>
+          </div>
+
+          <!-- HR Graph with interval bands -->
+          <div class="hr-graph-placeholder">
+            <div class="interval-band work-band" style="left: 0%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 8%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 11%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 19%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 22%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 30%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 33%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 41%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 44%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 52%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 55%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 63%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 66%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 74%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 77%; width: 8%;"></div>
+            <div class="interval-band rest-band" style="left: 85%; width: 3%;"></div>
+            <div class="interval-band work-band" style="left: 88%; width: 8%;"></div>
+            <svg class="svg-graph" viewBox="0 0 248 100" preserveAspectRatio="none">
+              <polyline fill="none" stroke="rgba(76,217,100,0.7)" stroke-width="1.5" stroke-linejoin="round"
+                points="0,80 10,70 20,55 30,40 35,35 40,50 45,55 50,50 60,35 70,28 80,22 85,20 90,35 95,40 100,35 110,25 120,18 130,15 135,30 140,35 145,30 155,20 165,15 175,12 180,25 185,30 190,25 200,15 210,10 220,8 225,22 230,28 235,22 245,12 248,10"/>
+            </svg>
+          </div>
+
+          <div class="graph-legend">
+            <div class="legend-item"><div class="legend-dot" style="background: #4cd964;"></div> Work</div>
+            <div class="legend-item"><div class="legend-dot" style="background: #5ac8fa;"></div> Rest</div>
+            <div class="legend-item"><div class="legend-dot" style="background: rgba(76,217,100,0.7);"></div> HR</div>
+          </div>
+
+          <!-- Peak HR per round -->
+          <div class="round-chart">
+            <div class="round-chart-title">PEAK HR PER ROUND</div>
+            <div class="round-bars">
+              <div class="round-bar-group"><div class="round-bar-hr">158</div><div class="round-bar peak" style="height: 45%;"></div><div class="round-bar-label">R1</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">165</div><div class="round-bar peak" style="height: 58%;"></div><div class="round-bar-label">R2</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">170</div><div class="round-bar peak" style="height: 68%;"></div><div class="round-bar-label">R3</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">168</div><div class="round-bar peak" style="height: 64%;"></div><div class="round-bar-label">R4</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">172</div><div class="round-bar peak" style="height: 72%;"></div><div class="round-bar-label">R5</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">175</div><div class="round-bar peak" style="height: 80%;"></div><div class="round-bar-label">R6</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">174</div><div class="round-bar peak" style="height: 78%;"></div><div class="round-bar-label">R7</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">178</div><div class="round-bar peak" style="height: 88%;"></div><div class="round-bar-label">R8</div></div>
+              <div class="round-bar-group"><div class="round-bar-hr">176</div><div class="round-bar peak" style="height: 84%;"></div><div class="round-bar-label">R9</div></div>
+            </div>
+          </div>
+
+          <!-- Recovery card — data only, no opinions -->
+          <div class="insight-card">
+            <div class="insight-title">RECOVERY</div>
+            <div class="insight-text">
+              Avg drop per rest: <span class="insight-highlight">&minus;18 bpm</span><br>
+              Best: R2 <span class="insight-highlight">&minus;24 bpm</span> &middot;
+              Worst: R8 <span style="color: #FF9500;">&minus;9 bpm</span><br>
+              First 3 avg: <span class="insight-highlight">&minus;22 bpm</span> &middot;
+              Last 3 avg: <span style="color: #FF9500;">&minus;11 bpm</span>
+            </div>
+          </div>
+
+          <div class="save-btn">Save to Health</div>
+          <div class="done-btn">Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: Summary -->
+  <div class="screen-container">
+    <div class="screen-label">Apple Watch — Summary</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div style="font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 1.5px;">SESSION COMPLETE</div>
+
+          <div class="watch-summary-stat" style="margin-top: 4px;">
+            <div class="watch-summary-value" style="color: #ffcc00;">155</div>
+            <div class="watch-summary-label">avg bpm</div>
+          </div>
+
+          <div class="watch-summary-row">
+            <div class="watch-summary-stat">
+              <div style="font-size: 14px; font-weight: 300; color: #ff3b30;">178</div>
+              <div class="watch-summary-label">peak</div>
+            </div>
+            <div class="watch-summary-stat">
+              <div style="font-size: 14px; font-weight: 300; color: #5ac8fa;">&minus;18</div>
+              <div class="watch-summary-label">avg recov</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 4px; width: 100%; text-align: center;">
+            <div style="font-size: 11px; font-weight: 300; color: rgba(255,255,255,0.4);">10:30</div>
+            <div style="font-size: 7px; color: rgba(255,255,255,0.25);">9 rounds &middot; 50/20 &middot; HIIT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 5: Audio + Haptic Cues Timeline -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Audio + Haptic Timeline</div>
+<p class="section-desc">What the athlete hears (phone) and feels (watch) during a session. Haptic column only fires when the toggle is on.</p>
+
+<div style="max-width: 560px; margin: 0 auto 48px; padding: 0 20px;">
+
+  <div class="cue-item" style="background: rgba(255,149,0,0.08); border-left: 3px solid #FF9500;">
+    <div class="cue-time">0:00</div>
+    <div class="cue-text">"Warm-up. 3 minutes."</div>
+    <div class="cue-haptic" style="visibility: hidden;">-</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(255,107,53,0.08); border-left: 3px solid #FF6B35;">
+    <div class="cue-time">2:57</div>
+    <div class="cue-text">"3&#8230; 2&#8230; 1&#8230;"</div>
+    <div class="cue-haptic">&#9201; tick tick tick</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(76,217,100,0.08); border-left: 3px solid #4cd964;">
+    <div class="cue-time">3:00</div>
+    <div class="cue-text">"Round 1. Work."</div>
+    <div class="cue-haptic">&#9201; strong tap</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(255,107,53,0.08); border-left: 3px solid #FF6B35;">
+    <div class="cue-time">3:47</div>
+    <div class="cue-text">"3&#8230; 2&#8230; 1&#8230;"</div>
+    <div class="cue-haptic">&#9201; tick tick tick</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(90,200,250,0.08); border-left: 3px solid #5ac8fa;">
+    <div class="cue-time">3:50</div>
+    <div class="cue-text">"Rest. Heart rate 165."</div>
+    <div class="cue-haptic">&#9201; gentle pulse</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(76,217,100,0.08); border-left: 3px solid #4cd964;">
+    <div class="cue-time">4:10</div>
+    <div class="cue-text">"Round 2. Work."</div>
+    <div class="cue-haptic">&#9201; strong tap</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(255,255,255,0.03);">
+    <div class="cue-time" style="color: rgba(255,255,255,0.15);">&#8230;</div>
+    <div class="cue-text" style="color: rgba(255,255,255,0.25); font-style: italic;">repeats for each round</div>
+    <div class="cue-haptic" style="visibility: hidden;">-</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(255,204,0,0.08); border-left: 3px solid #ffcc00;">
+    <div class="cue-time">12:40</div>
+    <div class="cue-text">"Last round! Work."</div>
+    <div class="cue-haptic">&#9201; double tap</div>
+  </div>
+
+  <div class="cue-item" style="background: rgba(255,255,255,0.06); border-left: 3px solid rgba(255,255,255,0.3);">
+    <div class="cue-time">13:30</div>
+    <div class="cue-text">"Session complete. Avg 155. Peak 178."</div>
+    <div class="cue-haptic">&#9201; success</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 6: Config with haptics off -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section-header">Haptics Disabled</div>
+<p class="section-desc">When the toggle is off, the Watch still shows the timer and HR — it just doesn't tap.</p>
+
+<div class="screen-row">
+
+  <!-- Phone: haptics off -->
+  <div class="screen-container">
+    <div class="screen-label">iPhone — Haptics Off</div>
+    <div style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 16px 20px; width: 250px; border: 1px solid rgba(255,255,255,0.06);">
+      <div class="toggle-row" style="border: none; padding: 0;">
+        <div>
+          <div class="toggle-label">Watch haptics</div>
+          <div class="toggle-sublabel">Tap wrist on phase changes</div>
+        </div>
+        <div class="toggle-switch off">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Watch: no haptic indicator -->
+  <div class="screen-container">
+    <div class="screen-label">Watch — No Haptic Badge</div>
+    <div class="watch-container-wrap">
+      <div class="watch-crown"></div>
+      <div class="watch-side-btn"></div>
+      <div class="watch">
+        <div class="watch-content">
+          <div class="watch-phase phase-work" style="font-size: 9px;">WORK</div>
+          <div class="watch-countdown work-color">34</div>
+          <div class="watch-round-text">Round 4 of 9</div>
+
+          <div class="watch-dots">
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot completed"></div>
+            <div class="watch-dot current"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+            <div class="watch-dot"></div>
+          </div>
+
+          <div style="margin-top: 8px; text-align: center;">
+            <div class="watch-hr" style="color: #ff3b30;">168</div>
+            <div class="watch-hr-label">bpm</div>
+          </div>
+
+          <!-- No haptic indicator shown -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

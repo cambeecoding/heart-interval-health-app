@@ -28,9 +28,16 @@
 		A017 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* SummaryView.swift */; };
 		A020 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* WatchConnectivityService.swift */; };
 		A021 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WatchMessage.swift */; };
+		A030 /* IntervalConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* IntervalConfig.swift */; };
+		A031 /* IntervalSessionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* IntervalSessionData.swift */; };
+		A032 /* IntervalTimerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* IntervalTimerEngine.swift */; };
+		A033 /* IntervalStandbySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* IntervalStandbySection.swift */; };
+		A034 /* IntervalExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F034 /* IntervalExerciseView.swift */; };
+		A035 /* IntervalSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F035 /* IntervalSummaryView.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 		T002 /* ExerciseViewModelHRSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFHR /* ExerciseViewModelHRSourceTests.swift */; };
 		T003 /* WatchConnectivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF03 /* WatchConnectivityTests.swift */; };
+		T004 /* IntervalTimerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF04 /* IntervalTimerEngineTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,10 +94,17 @@
 		F019 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		F020 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		F021 /* WatchMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchMessage.swift; path = ../Shared/WatchMessage.swift; sourceTree = "<group>"; };
+		F030 /* IntervalConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalConfig.swift; sourceTree = "<group>"; };
+		F031 /* IntervalSessionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalSessionData.swift; sourceTree = "<group>"; };
+		F032 /* IntervalTimerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerEngine.swift; sourceTree = "<group>"; };
+		F033 /* IntervalStandbySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalStandbySection.swift; sourceTree = "<group>"; };
+		F034 /* IntervalExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalExerciseView.swift; sourceTree = "<group>"; };
+		F035 /* IntervalSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalSummaryView.swift; sourceTree = "<group>"; };
 		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
 		TF02 /* BeatZoneTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BeatZoneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF03 /* WatchConnectivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityTests.swift; sourceTree = "<group>"; };
+		TF04 /* IntervalTimerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerEngineTests.swift; sourceTree = "<group>"; };
 		TFHR /* ExerciseViewModelHRSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelHRSourceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -167,6 +181,12 @@
 				F019 /* SummaryView.swift */,
 				F020 /* WatchConnectivityService.swift */,
 				F021 /* WatchMessage.swift */,
+				F030 /* IntervalConfig.swift */,
+				F031 /* IntervalSessionData.swift */,
+				F032 /* IntervalTimerEngine.swift */,
+				F033 /* IntervalStandbySection.swift */,
+				F034 /* IntervalExerciseView.swift */,
+				F035 /* IntervalSummaryView.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -177,6 +197,7 @@
 				TF01 /* ExerciseViewModelTests.swift */,
 				TFHR /* ExerciseViewModelHRSourceTests.swift */,
 				TF03 /* WatchConnectivityTests.swift */,
+				TF04 /* IntervalTimerEngineTests.swift */,
 			);
 			path = HeartIntervalTests;
 			sourceTree = "<group>";
@@ -308,6 +329,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		BPSS1 /* Set Version from Git Tag */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -322,11 +344,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Read nearest git tag (strips leading 'v', e.g. v1.2.0 -> 1.2.0)\n# Falls back to 1.0.0 if no tag exists yet.\nVERSION=$(git -C \"$SRCROOT\" describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//')\nif [ -z \"$VERSION\" ]; then\n  VERSION=\"1.0.0\"\nfi\n\n# Use total commit count as the build number (always incrementing)\nBUILD=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null)\nif [ -z \"$BUILD\" ]; then\n  BUILD=\"1\"\nfi\n\necho \"BeatZone version: $VERSION ($BUILD)\"\n\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION\" \"$PLIST\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string $VERSION\" \"$PLIST\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD\" \"$PLIST\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string $BUILD\" \"$PLIST\"\n";
+			shellScript = "set +e\nVERSION=$(git -C \"$SRCROOT\" describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//')\n[ -z \"$VERSION\" ] && VERSION=\"1.0.0\"\nBUILD=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null)\n[ -z \"$BUILD\" ] && BUILD=\"1\"\necho \"BeatZone version: $VERSION ($BUILD)\"\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\nif [ -f \"$PLIST\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION\" \"$PLIST\" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string $VERSION\" \"$PLIST\" >/dev/null 2>&1 || true\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD\" \"$PLIST\" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string $BUILD\" \"$PLIST\" >/dev/null 2>&1 || true\nfi\nexit 0\n";
 			showEnvVarsInLog = 0;
 		};
 		BPSS2 /* Set Version from Git Tag */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -341,7 +364,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Read nearest git tag (strips leading 'v', e.g. v1.2.0 -> 1.2.0)\n# Falls back to 1.0.0 if no tag exists yet.\nVERSION=$(git -C \"$SRCROOT\" describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//')\nif [ -z \"$VERSION\" ]; then\n  VERSION=\"1.0.0\"\nfi\n\n# Use total commit count as the build number (always incrementing)\nBUILD=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null)\nif [ -z \"$BUILD\" ]; then\n  BUILD=\"1\"\nfi\n\necho \"BeatZone version: $VERSION ($BUILD)\"\n\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION\" \"$PLIST\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string $VERSION\" \"$PLIST\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD\" \"$PLIST\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string $BUILD\" \"$PLIST\"\n";
+			shellScript = "set +e\nVERSION=$(git -C \"$SRCROOT\" describe --tags --abbrev=0 2>/dev/null | sed 's/^[vV]//')\n[ -z \"$VERSION\" ] && VERSION=\"1.0.0\"\nBUILD=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null)\n[ -z \"$BUILD\" ] && BUILD=\"1\"\necho \"BeatZone version: $VERSION ($BUILD)\"\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\nif [ -f \"$PLIST\" ]; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $VERSION\" \"$PLIST\" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c \"Add :CFBundleShortVersionString string $VERSION\" \"$PLIST\" >/dev/null 2>&1 || true\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD\" \"$PLIST\" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c \"Add :CFBundleVersion string $BUILD\" \"$PLIST\" >/dev/null 2>&1 || true\nfi\nexit 0\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -377,6 +400,12 @@
 				A017 /* SummaryView.swift in Sources */,
 				A020 /* WatchConnectivityService.swift in Sources */,
 				A021 /* WatchMessage.swift in Sources */,
+				A030 /* IntervalConfig.swift in Sources */,
+				A031 /* IntervalSessionData.swift in Sources */,
+				A032 /* IntervalTimerEngine.swift in Sources */,
+				A033 /* IntervalStandbySection.swift in Sources */,
+				A034 /* IntervalExerciseView.swift in Sources */,
+				A035 /* IntervalSummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +416,7 @@
 				T001 /* ExerciseViewModelTests.swift in Sources */,
 				T002 /* ExerciseViewModelHRSourceTests.swift in Sources */,
 				T003 /* WatchConnectivityTests.swift in Sources */,
+				T004 /* IntervalTimerEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

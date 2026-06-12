@@ -7,9 +7,12 @@ import XCTest
 final class SpyWatchConnectivityService: WatchConnectivityServicing {
     var onHeartRate: ((Double, Date) -> Void)?
     var onStartExercise: (() -> Void)?
+    var onStartIntervalExercise: (() -> Void)?
     var activateCalls = 0
 
     func activate() { activateCalls += 1 }
+    func sendIntervalConfig(_ config: IntervalConfig) {}
+    func sendIntervalPhaseUpdate(phase: String, round: Int, countdown: Int, seq: Int, totalRounds: Int) {}
 }
 
 // MARK: - Tests

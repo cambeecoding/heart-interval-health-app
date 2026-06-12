@@ -4,6 +4,8 @@ import AVFoundation
 @MainActor
 protocol AudioServiceProtocol {
     func speak(_ text: String)
+    func playTick()
+    func playGo()
     func startSilentLoop()
     func stopSilentLoop()
     func reactivateSession()
@@ -82,6 +84,53 @@ final class AudioService: NSObject, AudioServiceProtocol {
         silentPlayer = nil
     }
 
+    private var tonePlayer: AVAudioPlayer?
+
+    func playTick() {
+        playTone(frequency: 880, duration: 0.08)
+    }
+
+    func playGo() {
+        playTone(frequency: 1175, duration: 0.25)
+    }
+
+    private func playTone(frequency: Double, duration: Double) {
+        let sampleRate: Double = 44100
+        let frameCount = Int(sampleRate * duration)
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frameCount))
+        else { return }
+        buffer.frameLength = AVAudioFrameCount(frameCount)
+
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let fadeFrames = min(frameCount / 4, Int(sampleRate * 0.01))
+        for i in 0..<frameCount {
+            var sample = Float(sin(2.0 * .pi * frequency * Double(i) / sampleRate))
+            // Fade in
+            if i < fadeFrames {
+                sample *= Float(i) / Float(fadeFrames)
+            }
+            // Fade out
+            let tail = frameCount - i
+            if tail < fadeFrames {
+                sample *= Float(tail) / Float(fadeFrames)
+            }
+            channelData[i] = sample * 0.6
+        }
+
+        let tmp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tone_\(Int(frequency))_\(Int(duration * 1000)).caf")
+        if !FileManager.default.fileExists(atPath: tmp.path) {
+            guard let file = try? AVAudioFile(forWriting: tmp, settings: format.settings) else { return }
+            try? file.write(from: buffer)
+        }
+        guard let player = try? AVAudioPlayer(contentsOf: tmp) else { return }
+        player.volume = 1.0
+        player.prepareToPlay()
+        player.play()
+        tonePlayer = player
+    }
+
     func speak(_ text: String) {
         // Increment BEFORE stopping any current utterance so that when
         // didFinish fires for the interrupted utterance, activeSpeechCount
@@ -142,21 +191,23 @@ final class AudioService: NSObject, AudioServiceProtocol {
 
 // MARK: - AVSpeechSynthesizerDelegate
 
-@MainActor
 extension AudioService: AVSpeechSynthesizerDelegate {
 
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        activeSpeechCount = max(0, activeSpeechCount - 1)
-        if activeSpeechCount == 0 {
-            releaseDucking()
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.activeSpeechCount = max(0, self.activeSpeechCount - 1)
+            if self.activeSpeechCount == 0 {
+                self.releaseDucking()
+            }
         }
     }
 
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        // Treat a cancelled utterance the same as finished so the count stays accurate.
-        activeSpeechCount = max(0, activeSpeechCount - 1)
-        if activeSpeechCount == 0 {
-            releaseDucking()
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            self.activeSpeechCount = max(0, self.activeSpeechCount - 1)
+            if self.activeSpeechCount == 0 {
+                self.releaseDucking()
+            }
         }
     }
 }

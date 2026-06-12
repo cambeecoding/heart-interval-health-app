@@ -6,7 +6,11 @@ import XCTest
 @MainActor
 final class SpyAudioService: AudioServiceProtocol {
     var spoken: [String] = []
+    var tickCount = 0
+    var goCount = 0
     func speak(_ text: String)   { spoken.append(text) }
+    func playTick()              { tickCount += 1 }
+    func playGo()                { goCount += 1 }
     func startSilentLoop()       {}
     func stopSilentLoop()        {}
     func reactivateSession()     {}
@@ -39,6 +43,7 @@ final class ExerciseViewModelTests: XCTestCase {
 
     func test_handleSample_updatesTotalAvg() {
         let vm = ExerciseViewModel(audioService: SpyAudioService())
+        vm.appState = .exercising
         vm.handleNewHRSample(100, source: .none)
         vm.handleNewHRSample(200, source: .none)
         XCTAssertEqual(vm.totalAvgHR, 150)
