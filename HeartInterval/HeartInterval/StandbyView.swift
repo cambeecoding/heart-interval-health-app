@@ -10,74 +10,125 @@ struct StandbyView: View {
         ("Off", 0), ("2 min", 120), ("3 min", 180), ("5 min", 300), ("10 min", 600)
     ]
 
+    private let countdownOptions: [(label: String, value: Int)] = [
+        ("Off", 0), ("3s", 3), ("5s", 5)
+    ]
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 40)
 
-                Text("BeatZone")
-                    .font(.title)
-                    .fontWeight(.light)
-                    .foregroundColor(.white.opacity(0.6))
+                    // ── Mode toggle ──────────────────────────────────────
+                    modeToggle
+                        .padding(.horizontal, 40)
 
-                let ble   = viewModel.bleSourceStatus
-                let watch = viewModel.watchSourceStatus
+                    Spacer().frame(height: 12)
 
-                VStack(spacing: 4) {
-                    if !ble.message.isEmpty {
-                        StatusRow(message: ble.message, isReady: ble.isReady)
+                    Text("BeatZone")
+                        .font(.title)
+                        .fontWeight(.light)
+                        .foregroundColor(.white.opacity(0.6))
+
+                    let ble   = viewModel.bleSourceStatus
+                    let watch = viewModel.watchSourceStatus
+
+                    VStack(spacing: 4) {
+                        if !ble.message.isEmpty {
+                            StatusRow(message: ble.message, isReady: ble.isReady)
+                        }
+                        if !watch.message.isEmpty {
+                            StatusRow(message: watch.message, isReady: watch.isReady)
+                        }
+                        if viewModel.shouldShowSourceInstruction {
+                            Text("Start a workout on your Apple Watch or Garmin,\nor put your HR monitor in broadcast mode")
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.35))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                                .padding(.top, 2)
+                        }
                     }
-                    if !watch.message.isEmpty {
-                        StatusRow(message: watch.message, isReady: watch.isReady)
-                    }
-                    if viewModel.shouldShowSourceInstruction {
-                        Text("Start a workout on your Apple Watch or Garmin,\nor put your HR monitor in broadcast mode")
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.35))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 2)
-                    }
-                }
-                .padding(.top, 6)
+                    .padding(.top, 6)
 
-                Spacer().frame(height: 32)
+                    Spacer().frame(height: 24)
 
-                // ── Announcement settings ─────────────────────────────────
-                VStack(spacing: 14) {
+                    // ── Mode-specific config ─────────────────────────────
+                    if viewModel.trainingMode == .zone {
+                        VStack(spacing: 14) {
+                            AnnouncementPickerRow(
+                                label: "Speak every",
+                                options: speakOptions,
+                                selected: $viewModel.speakInterval
+                            )
+                            AnnouncementPickerRow(
+                                label: "Summary every",
+                                options: summaryOptions,
+                                selected: $viewModel.summaryInterval
+                            )
+                            WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 24)
+
+                        HRRangeSlider(range: 80...180, low: $viewModel.minHR, high: $viewModel.maxHR)
+                            .padding(.bottom, 16)
+                    } else {
+                        IntervalStandbySection(viewModel: viewModel)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 12)
+
+                        WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 16)
+                    }
+
+                    // ── Start countdown (shared) ─────────────────────────
                     AnnouncementPickerRow(
-                        label: "Speak every",
-                        options: speakOptions,
-                        selected: $viewModel.speakInterval
+                        label: "Start countdown",
+                        options: countdownOptions,
+                        selected: $viewModel.startCountdown
                     )
-                    AnnouncementPickerRow(
-                        label: "Summary every",
-                        options: summaryOptions,
-                        selected: $viewModel.summaryInterval
-                    )
-                    WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
+
+                    // ── Start button ─────────────────────────────────────
+                    Button(action: { viewModel.startExercise() }) {
+                        Text("START")
+                            .font(.headline)
+                            .frame(width: 160, height: 52)
+                            .background(viewModel.trainingMode == .zone ? Color.blue : Color.orange)
+                            .foregroundColor(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+
+                    Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
-
-                // ── HR zone slider ────────────────────────────────────────
-                HRRangeSlider(range: 80...180, low: $viewModel.minHR, high: $viewModel.maxHR)
-                    .padding(.bottom, 28)
-
-                Button(action: { viewModel.startExercise() }) {
-                    Text("START")
-                        .font(.headline)
-                        .frame(width: 160, height: 52)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-
-                Spacer()
             }
         }
+    }
+
+    private var modeToggle: some View {
+        HStack(spacing: 0) {
+            ForEach(TrainingMode.allCases, id: \.rawValue) { mode in
+                Button(action: { viewModel.trainingMode = mode }) {
+                    Text(mode == .zone ? "Zone" : "Intervals")
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(viewModel.trainingMode == mode
+                            ? (mode == .zone ? Color.blue : Color.orange)
+                            : Color.clear)
+                        .foregroundColor(viewModel.trainingMode == mode
+                            ? .white : .white.opacity(0.5))
+                }
+            }
+        }
+        .background(Color.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

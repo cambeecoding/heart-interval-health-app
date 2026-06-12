@@ -22,6 +22,11 @@ struct PausedView: View {
                     .foregroundColor(.orange.opacity(0.8))
                     .padding(.top, 6)
 
+                if let phase = viewModel.intervalPhase {
+                    intervalPausedInfo(phase: phase)
+                        .padding(.top, 16)
+                }
+
                 Spacer()
 
                 MetricRow(label: "Session avg", value: viewModel.totalAvgHR, unit: "bpm", valueColor: .yellow)
@@ -51,6 +56,43 @@ struct PausedView: View {
                     }
                 }
                 .padding(.bottom, 48)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func intervalPausedInfo(phase: IntervalPhase) -> some View {
+        VStack(spacing: 4) {
+            let label: String = {
+                switch phase {
+                case .warmup: return "WARM UP"
+                case .work: return "WORK"
+                case .rest: return "REST"
+                case .finished: return "DONE"
+                }
+            }()
+            let color: Color = {
+                switch phase {
+                case .warmup: return .orange
+                case .work: return .green
+                case .rest: return .cyan
+                case .finished: return .white
+                }
+            }()
+
+            Text(label)
+                .font(.system(size: 12, weight: .bold))
+                .tracking(2)
+                .foregroundColor(color)
+
+            Text("\(viewModel.intervalCountdown)s remaining")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.35))
+
+            if case .work(let round) = phase {
+                Text("Round \(round) of \(viewModel.intervalConfig.rounds)")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.25))
             }
         }
     }
