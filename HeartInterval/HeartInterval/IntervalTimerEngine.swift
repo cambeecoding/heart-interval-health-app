@@ -22,6 +22,7 @@ protocol IntervalTimerEngineProtocol: AnyObject {
 
     var phaseRecords: [IntervalPhaseRecord] { get }
     var roundSamples: [[HRSample]] { get }
+    var restSamples: [[HRSample]] { get }
 }
 
 @MainActor
@@ -43,6 +44,7 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
 
     private(set) var phaseRecords: [IntervalPhaseRecord] = []
     private(set) var roundSamples: [[HRSample]] = []
+    private(set) var restSamples: [[HRSample]] = []
     private var currentPhaseStartDate = Date()
 
     func start(config: IntervalConfig) {
@@ -50,6 +52,7 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
         totalRounds = config.rounds
         phaseRecords = []
         roundSamples = []
+        restSamples = []
         isPaused = false
 
         if config.warmupDuration > 0 {
@@ -90,8 +93,16 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
     }
 
     func recordSample(_ sample: HRSample) {
-        guard !roundSamples.isEmpty else { return }
-        roundSamples[roundSamples.count - 1].append(sample)
+        switch currentPhase {
+        case .work:
+            guard !roundSamples.isEmpty else { return }
+            roundSamples[roundSamples.count - 1].append(sample)
+        case .rest:
+            guard !restSamples.isEmpty else { return }
+            restSamples[restSamples.count - 1].append(sample)
+        default:
+            break
+        }
     }
 
     // MARK: - Phase management
@@ -107,6 +118,9 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
             if round > roundSamples.count {
                 roundSamples.append([])
             }
+        }
+        if case .rest = phase {
+            restSamples.append([])
         }
 
         onPhaseChange?(phase)

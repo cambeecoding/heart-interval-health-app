@@ -202,6 +202,13 @@ final class ExerciseViewModel: ObservableObject {
                 self.startExercise()
             }
         }
+        self.watchConnectivityService.onStartIntervalExercise = { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.appState == .standby else { return }
+                self.trainingMode = .intervals
+                self.startExercise()
+            }
+        }
         self.watchConnectivityService.activate()
 
         // Start BLE scanning immediately so we can show HR source status on standby
@@ -327,15 +334,29 @@ final class ExerciseViewModel: ObservableObject {
         RunLoop.main.add(t, forMode: .common)
     }
 
+    private var watchPhaseSeq = 0
+
     private func beginExercisePhase() {
         appState = .exercising
         startTimers()
         startNoHRTimeout()
 
         if trainingMode == .intervals {
+            watchPhaseSeq = 0
+            watchConnectivityService.sendIntervalConfig(intervalConfig)
+
             let engine = IntervalTimerEngine()
             engine.onPhaseChange = { [weak self] phase in
-                self?.intervalPhase = phase
+                guard let self else { return }
+                self.intervalPhase = phase
+                self.watchPhaseSeq += 1
+                self.watchConnectivityService.sendIntervalPhaseUpdate(
+                    phase: self.phaseString(phase),
+                    round: engine.currentRound,
+                    countdown: engine.countdown,
+                    seq: self.watchPhaseSeq,
+                    totalRounds: engine.totalRounds
+                )
             }
             engine.onCountdownTick = { [weak self] countdown in
                 self?.intervalCountdown = countdown
@@ -350,6 +371,15 @@ final class ExerciseViewModel: ObservableObject {
             engine.start(config: intervalConfig)
         } else {
             audioService.speak("Starting exercise.")
+        }
+    }
+
+    private func phaseString(_ phase: IntervalPhase) -> String {
+        switch phase {
+        case .warmup: return "warmup"
+        case .work: return "work"
+        case .rest: return "rest"
+        case .finished: return "finished"
         }
     }
 
@@ -424,10 +454,9 @@ final class ExerciseViewModel: ObservableObject {
             let avg = bpms.isEmpty ? 0 : bpms.reduce(0, +) / Double(bpms.count)
 
             var recovery: Double?
-            let nextRestIndex = i
-            if nextRestIndex < engine.roundSamples.count - 1 {
-                let restSamples = engine.roundSamples[i + 1].map(\.bpm)
-                if let restMin = restSamples.min() {
+            if i < engine.restSamples.count {
+                let restBpms = engine.restSamples[i].map(\.bpm)
+                if let restMin = restBpms.min(), peak > 0 {
                     recovery = peak - restMin
                 }
             }
@@ -580,8 +609,10 @@ final class ExerciseViewModel: ObservableObject {
         RunLoop.main.add(clock, forMode: .common)
         clockTimer = clock
 
-        startSpeakTimer()
-        startSummaryTimer()
+        if trainingMode == .zone {
+            startSpeakTimer()
+            startSummaryTimer()
+        }
 
         #if targetEnvironment(simulator)
         let mock = Timer(timeInterval: 3, repeats: true) { [weak self] _ in

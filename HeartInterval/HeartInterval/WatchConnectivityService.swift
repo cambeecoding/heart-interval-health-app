@@ -4,13 +4,17 @@ import WatchConnectivity
 protocol WatchConnectivityServicing: AnyObject {
     var onHeartRate: ((Double, Date) -> Void)? { get set }
     var onStartExercise: (() -> Void)? { get set }
+    var onStartIntervalExercise: (() -> Void)? { get set }
     func activate()
+    func sendIntervalConfig(_ config: IntervalConfig)
+    func sendIntervalPhaseUpdate(phase: String, round: Int, countdown: Int, seq: Int, totalRounds: Int)
 }
 
 final class WatchConnectivityService: NSObject, WatchConnectivityServicing, WCSessionDelegate {
 
     var onHeartRate: ((Double, Date) -> Void)?
     var onStartExercise: (() -> Void)?
+    var onStartIntervalExercise: (() -> Void)?
 
     private let session: WCSession
 
@@ -67,6 +71,38 @@ final class WatchConnectivityService: NSObject, WatchConnectivityServicing, WCSe
 
         case .workoutEnded:
             break
+
+        case .startIntervalExercise:
+            DispatchQueue.main.async { [weak self] in
+                self?.onStartIntervalExercise?()
+            }
+
+        case .intervalConfig, .intervalPhaseUpdate:
+            break
         }
+    }
+
+    // MARK: - Send to Watch
+
+    func sendIntervalConfig(_ config: IntervalConfig) {
+        guard session.isReachable, let data = try? JSONEncoder().encode(config) else { return }
+        let message: [String: Any] = [
+            WatchMessageKey.type: WatchMessageType.intervalConfig.rawValue,
+            WatchMessageKey.configJSON: data
+        ]
+        session.sendMessage(message, replyHandler: nil, errorHandler: nil)
+    }
+
+    func sendIntervalPhaseUpdate(phase: String, round: Int, countdown: Int, seq: Int, totalRounds: Int = 0) {
+        guard session.isReachable else { return }
+        let message: [String: Any] = [
+            WatchMessageKey.type: WatchMessageType.intervalPhaseUpdate.rawValue,
+            WatchMessageKey.phase: phase,
+            WatchMessageKey.round: round,
+            WatchMessageKey.countdown: countdown,
+            WatchMessageKey.seq: seq,
+            WatchMessageKey.totalRounds: totalRounds
+        ]
+        session.sendMessage(message, replyHandler: nil, errorHandler: nil)
     }
 }

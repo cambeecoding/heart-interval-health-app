@@ -7,7 +7,9 @@ struct ContentView: View {
         VStack(spacing: 12) {
             Spacer()
 
-            if let bpm = viewModel.currentBPM {
+            if viewModel.isIntervalActive {
+                WatchIntervalView(viewModel: viewModel)
+            } else if let bpm = viewModel.currentBPM {
                 Text("\(Int(bpm.rounded()))")
                     .font(.system(size: 64, weight: .bold, design: .rounded))
                     .foregroundColor(.red)
