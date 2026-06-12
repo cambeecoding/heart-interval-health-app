@@ -1,3 +1,22 @@
 # macOS
 .DS_Store
 **/.DS_Store
+
+# Xcode user data (window state, breakpoints, schemes — changes on every Xcode session)
+*.xcuserstate
+xcuserdata/
+**/*.xcuserstate
+**/xcuserdata/
+
+# Xcode build artifacts
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Generated version config
+HeartInterval/BuildVersion.xcconfig
+
+# Mockups (dev only)
+mockups/
