@@ -39,6 +39,7 @@ final class ExerciseViewModelTests: XCTestCase {
 
     func test_handleSample_updatesTotalAvg() {
         let vm = ExerciseViewModel(audioService: SpyAudioService())
+        vm.appState = .exercising
         vm.handleNewHRSample(100, source: .none)
         vm.handleNewHRSample(200, source: .none)
         XCTAssertEqual(vm.totalAvgHR, 150)

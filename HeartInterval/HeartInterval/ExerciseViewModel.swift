@@ -552,11 +552,14 @@ final class ExerciseViewModel: ObservableObject {
         if source == .watch {
             resetWatchTimeout()
         }
-        let sample = HRSample(bpm: bpm, date: date)
-        allSamples.append(sample)
-        currentHR  = Int(bpm.rounded())
-        totalAvgHR = average(of: allSamples.map(\.bpm))
-        intervalEngine?.recordSample(sample)
+        currentHR = Int(bpm.rounded())
+
+        if appState == .exercising {
+            let sample = HRSample(bpm: bpm, date: date)
+            allSamples.append(sample)
+            totalAvgHR = average(of: allSamples.map(\.bpm))
+            intervalEngine?.recordSample(sample)
+        }
         checkZoneBreaches()
     }
 

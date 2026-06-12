@@ -231,7 +231,7 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
             }
             if duration >= 10 {
                 let half = duration / 2
-                if countdown == half && half != 10 {
+                if countdown == half && half != 10 && half > 3 {
                     onAudioCue?("Halfway.")
                 }
             }
