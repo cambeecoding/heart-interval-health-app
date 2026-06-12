@@ -6,7 +6,11 @@ import XCTest
 @MainActor
 final class SpyAudioService: AudioServiceProtocol {
     var spoken: [String] = []
+    var tickCount = 0
+    var goCount = 0
     func speak(_ text: String)   { spoken.append(text) }
+    func playTick()              { tickCount += 1 }
+    func playGo()                { goCount += 1 }
     func startSilentLoop()       {}
     func stopSilentLoop()        {}
     func reactivateSession()     {}

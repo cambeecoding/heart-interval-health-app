@@ -7,6 +7,7 @@ final class IntervalTimerEngineTests: XCTestCase {
     private var engine: IntervalTimerEngine!
     private var phases: [IntervalPhase]!
     private var cues: [String]!
+    private var beepCount: Int!
     private var completed: Bool!
 
     override func setUp() {
@@ -14,10 +15,12 @@ final class IntervalTimerEngineTests: XCTestCase {
         engine = IntervalTimerEngine()
         phases = []
         cues = []
+        beepCount = 0
         completed = false
 
         engine.onPhaseChange = { [unowned self] phase in phases.append(phase) }
         engine.onAudioCue = { [unowned self] cue in cues.append(cue) }
+        engine.onBeep = { [unowned self] in beepCount += 1 }
         engine.onSessionComplete = { [unowned self] in completed = true }
     }
 
@@ -105,17 +108,22 @@ final class IntervalTimerEngineTests: XCTestCase {
         XCTAssertTrue(cues.contains("30 seconds remaining."))
     }
 
-    func test_warmup30sCue_distinctFromMidpoint() {
+    func test_warmupMidpointAndTenSecond() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 90))
-        // midpoint at 45, 30s cue at 30
-        tick(60)
+        tick(80)
         XCTAssertTrue(cues.contains("45 seconds remaining."))
-        XCTAssertTrue(cues.contains("30 seconds."))
+        XCTAssertTrue(cues.contains("10 seconds."))
     }
 
-    func test_warmupNoMidpointIfShort() {
+    func test_warmup10sWarning() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 30))
-        tick(30)
+        tick(20) // 30 → 10
+        XCTAssertTrue(cues.contains("10 seconds."))
+    }
+
+    func test_warmupNoMidpointIfVeryShort() {
+        engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 15))
+        tick(15)
         let midpointCues = cues.filter { $0.contains("remaining") }
         XCTAssertTrue(midpointCues.isEmpty)
     }
@@ -164,19 +172,18 @@ final class IntervalTimerEngineTests: XCTestCase {
         XCTAssertFalse(cues.contains("Halfway."))
     }
 
-    func test_321Countdown_duringWork() {
+    func test_321Beeps_duringWork() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 0))
-        tick(4) // 5→4→3→2→1
-        XCTAssertTrue(cues.contains("3"))
-        XCTAssertTrue(cues.contains("2"))
-        XCTAssertTrue(cues.contains("1"))
+        tick(4) // 5→4→3→2→1 → beeps at 3,2,1
+        XCTAssertEqual(beepCount, 3)
     }
 
-    func test_321Countdown_duringRest() {
+    func test_321Beeps_duringRest() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 5, rounds: 2, warmupDuration: 0))
-        tick(9) // work(5: cues 3,2,1) + rest(4 of 5: cues 3,2)
-        XCTAssertTrue(cues.filter { $0 == "3" }.count >= 2)
-        XCTAssertTrue(cues.filter { $0 == "2" }.count >= 2)
+        // work(5): tick 5→4,4→3(beep),3→2(beep),2→1(beep),1→0 → rest
+        // rest(5): tick 5→4,4→3(beep),3→2(beep),2→1(beep),1→0 → work(2)
+        tick(10)
+        XCTAssertEqual(beepCount, 6) // 3 from work + 3 from rest
     }
 
     // MARK: - Audio cues: rest

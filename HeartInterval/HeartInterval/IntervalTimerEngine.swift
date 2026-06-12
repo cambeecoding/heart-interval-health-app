@@ -18,6 +18,7 @@ protocol IntervalTimerEngineProtocol: AnyObject {
     var onPhaseChange: ((IntervalPhase) -> Void)? { get set }
     var onCountdownTick: ((Int) -> Void)? { get set }
     var onAudioCue: ((String) -> Void)? { get set }
+    var onBeep: (() -> Void)? { get set }
     var onSessionComplete: (() -> Void)? { get set }
 
     var phaseRecords: [IntervalPhaseRecord] { get }
@@ -37,6 +38,7 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
     var onPhaseChange: ((IntervalPhase) -> Void)?
     var onCountdownTick: ((Int) -> Void)?
     var onAudioCue: ((String) -> Void)?
+    var onBeep: (() -> Void)?
     var onSessionComplete: (() -> Void)?
 
     private var config = IntervalConfig()
@@ -214,16 +216,18 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
         guard let phase = currentPhase else { return }
         let duration = durationForCurrentPhase()
 
+        // Phase-specific voice cues
         switch phase {
         case .warmup:
-            if config.warmupDuration >= 60 {
-                let midpoint = config.warmupDuration / 2
-                if countdown == midpoint {
+            let d = config.warmupDuration
+            if d >= 20 {
+                let half = d / 2
+                if countdown == half && half > 10 && half > 3 {
                     onAudioCue?("\(countdown) seconds remaining.")
                 }
-                if countdown == 30 && midpoint != 30 {
-                    onAudioCue?("30 seconds.")
-                }
+            }
+            if d > 15 && countdown == 10 {
+                onAudioCue?("10 seconds.")
             }
         case .work:
             if duration > 15 && countdown == 10 {
@@ -239,8 +243,9 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
             break
         }
 
+        // 3-2-1 beep countdown for all phases
         if countdown >= 1 && countdown <= 3 {
-            onAudioCue?("\(countdown)")
+            onBeep?()
         }
     }
 

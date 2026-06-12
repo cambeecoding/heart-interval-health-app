@@ -313,6 +313,7 @@ final class ExerciseViewModel: ObservableObject {
 
     private func runStartCountdown() {
         startCountdownRemaining = startCountdown
+        audioService.playTick()
         let t = Timer(timeInterval: 1, repeats: true) { [weak self] timer in
             Task { @MainActor [weak self] in
                 guard let self else { timer.invalidate(); return }
@@ -320,14 +321,15 @@ final class ExerciseViewModel: ObservableObject {
                     timer.invalidate()
                     return
                 }
-                self.audioService.speak("\(remaining)")
                 let next = remaining - 1
                 if next <= 0 {
                     timer.invalidate()
                     self.startCountdownRemaining = nil
+                    self.audioService.playGo()
                     self.beginExercisePhase()
                 } else {
                     self.startCountdownRemaining = next
+                    self.audioService.playTick()
                 }
             }
         }
@@ -349,6 +351,9 @@ final class ExerciseViewModel: ObservableObject {
             engine.onPhaseChange = { [weak self] phase in
                 guard let self else { return }
                 self.intervalPhase = phase
+                if phase != .finished {
+                    self.audioService.playGo()
+                }
                 self.watchPhaseSeq += 1
                 self.watchConnectivityService.sendIntervalPhaseUpdate(
                     phase: self.phaseString(phase),
@@ -363,6 +368,9 @@ final class ExerciseViewModel: ObservableObject {
             }
             engine.onAudioCue = { [weak self] cue in
                 self?.audioService.speak(cue)
+            }
+            engine.onBeep = { [weak self] in
+                self?.audioService.playTick()
             }
             engine.onSessionComplete = { [weak self] in
                 self?.endExercise()
