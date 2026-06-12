@@ -202,7 +202,7 @@ struct IntervalExerciseView: View {
         default: duration = 1
         }
         guard duration > 0 else { return 0 }
-        return CGFloat(duration - viewModel.intervalCountdown) / CGFloat(duration)
+        return max(0, min(1, CGFloat(duration - viewModel.intervalCountdown) / CGFloat(duration)))
     }
 
     private func dotColor(for round: Int) -> Color {
