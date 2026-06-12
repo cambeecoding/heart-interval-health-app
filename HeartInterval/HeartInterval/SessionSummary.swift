@@ -40,6 +40,20 @@ struct SessionSummary: Equatable {
     let minHR: Int
     let maxHR: Int
     let activityType: WorkoutActivityType
+    let intervalData: IntervalSessionData?
+
+    init(startDate: Date, endDate: Date, durationSeconds: Int, samples: [HRSample],
+         minHR: Int, maxHR: Int, activityType: WorkoutActivityType,
+         intervalData: IntervalSessionData? = nil) {
+        self.startDate = startDate
+        self.endDate = endDate
+        self.durationSeconds = durationSeconds
+        self.samples = samples
+        self.minHR = minHR
+        self.maxHR = maxHR
+        self.activityType = activityType
+        self.intervalData = intervalData
+    }
 
     var avgHR: Int? {
         guard !samples.isEmpty else { return nil }

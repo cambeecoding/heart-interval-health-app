@@ -28,9 +28,13 @@
 		A017 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* SummaryView.swift */; };
 		A020 /* WatchConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* WatchConnectivityService.swift */; };
 		A021 /* WatchMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WatchMessage.swift */; };
+		A030 /* IntervalConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* IntervalConfig.swift */; };
+		A031 /* IntervalSessionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* IntervalSessionData.swift */; };
+		A032 /* IntervalTimerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* IntervalTimerEngine.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 		T002 /* ExerciseViewModelHRSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFHR /* ExerciseViewModelHRSourceTests.swift */; };
 		T003 /* WatchConnectivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF03 /* WatchConnectivityTests.swift */; };
+		T004 /* IntervalTimerEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF04 /* IntervalTimerEngineTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,11 +91,15 @@
 		F019 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		F020 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		F021 /* WatchMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WatchMessage.swift; path = ../Shared/WatchMessage.swift; sourceTree = "<group>"; };
+		F030 /* IntervalConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalConfig.swift; sourceTree = "<group>"; };
+		F031 /* IntervalSessionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalSessionData.swift; sourceTree = "<group>"; };
+		F032 /* IntervalTimerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerEngine.swift; sourceTree = "<group>"; };
 		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
 		TF02 /* BeatZoneTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BeatZoneTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF03 /* WatchConnectivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityTests.swift; sourceTree = "<group>"; };
 		TFHR /* ExerciseViewModelHRSourceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelHRSourceTests.swift; sourceTree = "<group>"; };
+		TF04 /* IntervalTimerEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalTimerEngineTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -167,6 +175,9 @@
 				F019 /* SummaryView.swift */,
 				F020 /* WatchConnectivityService.swift */,
 				F021 /* WatchMessage.swift */,
+				F030 /* IntervalConfig.swift */,
+				F031 /* IntervalSessionData.swift */,
+				F032 /* IntervalTimerEngine.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -177,6 +188,7 @@
 				TF01 /* ExerciseViewModelTests.swift */,
 				TFHR /* ExerciseViewModelHRSourceTests.swift */,
 				TF03 /* WatchConnectivityTests.swift */,
+				TF04 /* IntervalTimerEngineTests.swift */,
 			);
 			path = HeartIntervalTests;
 			sourceTree = "<group>";
@@ -377,6 +389,9 @@
 				A017 /* SummaryView.swift in Sources */,
 				A020 /* WatchConnectivityService.swift in Sources */,
 				A021 /* WatchMessage.swift in Sources */,
+				A030 /* IntervalConfig.swift in Sources */,
+				A031 /* IntervalSessionData.swift in Sources */,
+				A032 /* IntervalTimerEngine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,6 +402,7 @@
 				T001 /* ExerciseViewModelTests.swift in Sources */,
 				T002 /* ExerciseViewModelHRSourceTests.swift in Sources */,
 				T003 /* WatchConnectivityTests.swift in Sources */,
+				T004 /* IntervalTimerEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

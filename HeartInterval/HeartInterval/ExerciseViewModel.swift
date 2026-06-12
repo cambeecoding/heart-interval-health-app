@@ -28,12 +28,14 @@ final class ExerciseViewModel: ObservableObject {
     @Published var secondsSinceLastHR: Int?  = nil
     @Published var hrSource: HRSource        = .none
     @Published var bleStatus: String         = ""
-    /// Latest HR sample seen from HealthKit while on the standby screen.
-    /// nil = no recent sample (Watch/device not currently streaming).
     @Published var standbyWatchBPM: Double?  = nil
-    /// True if no HR sample has arrived within the timeout after starting exercise.
-    /// Surfaces a warning + Settings deep-link in ExerciseView.
     @Published var hrSourceTimedOut: Bool    = false
+
+    // MARK: - Interval mode state
+    @Published var intervalPhase: IntervalPhase?     = nil
+    @Published var intervalCountdown: Int             = 0
+    @Published var startCountdownRemaining: Int?      = nil
+    private var intervalEngine: IntervalTimerEngine?
 
     // MARK: - UserDefaults-backed workout type
     var selectedActivityType: WorkoutActivityType {
@@ -76,6 +78,38 @@ final class ExerciseViewModel: ObservableObject {
         if speakInterval > 0 { return speakInterval }
         if summaryInterval > 0 { return summaryInterval }
         return 60
+    }
+
+    // MARK: - UserDefaults-backed training mode
+    var trainingMode: TrainingMode {
+        get {
+            let raw = UserDefaults.standard.string(forKey: "trainingMode") ?? "zone"
+            return TrainingMode(rawValue: raw) ?? .zone
+        }
+        set {
+            UserDefaults.standard.set(newValue.rawValue, forKey: "trainingMode")
+            objectWillChange.send()
+        }
+    }
+
+    var intervalConfig: IntervalConfig {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "intervalConfig"),
+                  let config = try? JSONDecoder().decode(IntervalConfig.self, from: data)
+            else { return IntervalConfig() }
+            return config
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: "intervalConfig")
+            }
+            objectWillChange.send()
+        }
+    }
+
+    var startCountdown: Int {
+        get { UserDefaults.standard.object(forKey: "startCountdown") as? Int ?? 3 }
+        set { UserDefaults.standard.set(newValue, forKey: "startCountdown"); objectWillChange.send() }
     }
 
     // MARK: - Services
@@ -249,29 +283,73 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func requestHealthKitAndBegin() {
-        // Relaxed by 10s: defends against clock skew / sync lag where the Watch
-        // timestamps a sample fractions of a second before the auth callback fires.
-        // Still rules out genuinely stale samples (the original "frozen 61 bpm" bug
-        // involved samples from hours ago).
         let since = Date().addingTimeInterval(-10)
-        #if DEBUG
-        print("[BeatZone HK] requestAuthorization called, since=\(since)")
-        #endif
         healthKitService.requestAuthorization { [weak self] granted in
             guard let self else { return }
-            #if DEBUG
-            print("[BeatZone HK] requestAuthorization completed, granted=\(granted)")
-            #endif
-            self.appState = .exercising
-            self.audioService.speak("Starting exercise.")
-            self.startTimers()
-            self.startNoHRTimeout()
-            self.healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
-                Task { @MainActor [weak self] in
-                    guard let self, self.hrSource != .ble && self.hrSource != .watch else { return }
-                    self.handleNewHRSample(bpm, source: .healthKit, date: date)
+            self.beginObservingHR(since: since)
+            if self.startCountdown > 0 {
+                self.runStartCountdown()
+            } else {
+                self.beginExercisePhase()
+            }
+        }
+    }
+
+    private func beginObservingHR(since: Date) {
+        healthKitService.startObservingHeartRate(since: since) { [weak self] bpm, date in
+            Task { @MainActor [weak self] in
+                guard let self, self.hrSource != .ble && self.hrSource != .watch else { return }
+                self.handleNewHRSample(bpm, source: .healthKit, date: date)
+            }
+        }
+    }
+
+    private func runStartCountdown() {
+        startCountdownRemaining = startCountdown
+        let t = Timer(timeInterval: 1, repeats: true) { [weak self] timer in
+            Task { @MainActor [weak self] in
+                guard let self else { timer.invalidate(); return }
+                guard let remaining = self.startCountdownRemaining, remaining > 0 else {
+                    timer.invalidate()
+                    return
+                }
+                self.audioService.speak("\(remaining)")
+                let next = remaining - 1
+                if next <= 0 {
+                    timer.invalidate()
+                    self.startCountdownRemaining = nil
+                    self.beginExercisePhase()
+                } else {
+                    self.startCountdownRemaining = next
                 }
             }
+        }
+        RunLoop.main.add(t, forMode: .common)
+    }
+
+    private func beginExercisePhase() {
+        appState = .exercising
+        startTimers()
+        startNoHRTimeout()
+
+        if trainingMode == .intervals {
+            let engine = IntervalTimerEngine()
+            engine.onPhaseChange = { [weak self] phase in
+                self?.intervalPhase = phase
+            }
+            engine.onCountdownTick = { [weak self] countdown in
+                self?.intervalCountdown = countdown
+            }
+            engine.onAudioCue = { [weak self] cue in
+                self?.audioService.speak(cue)
+            }
+            engine.onSessionComplete = { [weak self] in
+                self?.endExercise()
+            }
+            self.intervalEngine = engine
+            engine.start(config: intervalConfig)
+        } else {
+            audioService.speak("Starting exercise.")
         }
     }
 
@@ -294,13 +372,21 @@ final class ExerciseViewModel: ObservableObject {
 
     func pauseExercise() {
         stopTimers()
+        intervalEngine?.pause()
         appState = .paused
-        announceMetrics(includeTotal: true)
+        if trainingMode == .zone {
+            announceMetrics(includeTotal: true)
+        }
     }
 
     func continueExercise() {
         appState = .exercising
+        intervalEngine?.resume()
         startTimers()
+    }
+
+    func skipInterval() {
+        intervalEngine?.skip()
     }
 
     func endExercise() {
@@ -310,6 +396,13 @@ final class ExerciseViewModel: ObservableObject {
         workoutManager.endExercise()
         audioService.stopSilentLoop()
 
+        var intervalData: IntervalSessionData?
+        if let engine = intervalEngine {
+            engine.stop()
+            intervalData = buildIntervalSessionData(from: engine)
+            intervalEngine = nil
+        }
+
         let summary = SessionSummary(
             startDate: exerciseStartDate,
             endDate: Date(),
@@ -317,24 +410,60 @@ final class ExerciseViewModel: ObservableObject {
             samples: allSamples,
             minHR: minHR,
             maxHR: maxHR,
-            activityType: selectedActivityType
+            activityType: selectedActivityType,
+            intervalData: intervalData
         )
         appState = .summary(summary)
     }
 
+    private func buildIntervalSessionData(from engine: IntervalTimerEngine) -> IntervalSessionData {
+        var rounds: [IntervalRound] = []
+        for (i, samples) in engine.roundSamples.enumerated() {
+            let bpms = samples.map(\.bpm)
+            let peak = bpms.max() ?? 0
+            let avg = bpms.isEmpty ? 0 : bpms.reduce(0, +) / Double(bpms.count)
+
+            var recovery: Double?
+            let nextRestIndex = i
+            if nextRestIndex < engine.roundSamples.count - 1 {
+                let restSamples = engine.roundSamples[i + 1].map(\.bpm)
+                if let restMin = restSamples.min() {
+                    recovery = peak - restMin
+                }
+            }
+
+            rounds.append(IntervalRound(
+                roundNumber: i + 1,
+                peakHR: peak,
+                avgHR: avg,
+                recoveryDrop: recovery
+            ))
+        }
+
+        return IntervalSessionData(
+            config: intervalConfig,
+            rounds: rounds,
+            phases: engine.phaseRecords
+        )
+    }
+
     func dismissSummary() {
-        currentHR          = nil
-        totalAvgHR         = nil
-        elapsedSeconds     = 0
-        secondsSinceLastHR = nil
-        hrSource           = .none
-        hrSourceTimedOut   = false
-        isAboveMax         = false
-        isBelowMin         = false
-        isSaving           = false
-        summaryError       = nil
-        allSamples         = []
-        appState           = .standby
+        currentHR              = nil
+        totalAvgHR             = nil
+        elapsedSeconds         = 0
+        secondsSinceLastHR     = nil
+        hrSource               = .none
+        hrSourceTimedOut       = false
+        isAboveMax             = false
+        isBelowMin             = false
+        isSaving               = false
+        summaryError           = nil
+        allSamples             = []
+        intervalPhase          = nil
+        intervalCountdown      = 0
+        intervalEngine         = nil
+        startCountdownRemaining = nil
+        appState               = .standby
         startStandbyPoll()
     }
 
@@ -394,9 +523,11 @@ final class ExerciseViewModel: ObservableObject {
         if source == .watch {
             resetWatchTimeout()
         }
-        allSamples.append(HRSample(bpm: bpm, date: date))
+        let sample = HRSample(bpm: bpm, date: date)
+        allSamples.append(sample)
         currentHR  = Int(bpm.rounded())
         totalAvgHR = average(of: allSamples.map(\.bpm))
+        intervalEngine?.recordSample(sample)
         checkZoneBreaches()
     }
 
@@ -413,7 +544,7 @@ final class ExerciseViewModel: ObservableObject {
     }
 
     private func checkZoneBreaches() {
-        guard appState == .exercising, let hr = currentHR else { return }
+        guard appState == .exercising, trainingMode == .zone, let hr = currentHR else { return }
         if hr > maxHR {
             if !isAboveMax {
                 isAboveMax = true
@@ -435,12 +566,15 @@ final class ExerciseViewModel: ObservableObject {
     private func startTimers() {
         stopTimers()
 
-        // Clock: fires every second to drive elapsed time and secondsSinceLastHR
         let clock = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.elapsedSeconds += 1
                 if self.secondsSinceLastHR != nil { self.secondsSinceLastHR! += 1 }
+                if let engine = self.intervalEngine {
+                    engine.currentHR = self.currentHR
+                    engine.tick()
+                }
             }
         }
         RunLoop.main.add(clock, forMode: .common)
