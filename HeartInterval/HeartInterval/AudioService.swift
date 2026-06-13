@@ -1,9 +1,16 @@
 import AVFoundation
 
+enum SpeechMood {
+    case neutral
+    case energetic
+    case calm
+}
+
 /// Abstraction over audio output so the ViewModel can be tested with a spy.
 @MainActor
 protocol AudioServiceProtocol {
     func speak(_ text: String)
+    func speak(_ text: String, mood: SpeechMood)
     func playTick()
     func playGo()
     func startSilentLoop()
@@ -115,7 +122,7 @@ final class AudioService: NSObject, AudioServiceProtocol {
             if tail < fadeFrames {
                 sample *= Float(tail) / Float(fadeFrames)
             }
-            channelData[i] = sample * 0.6
+            channelData[i] = sample * 0.85
         }
 
         let tmp = FileManager.default.temporaryDirectory
@@ -132,17 +139,30 @@ final class AudioService: NSObject, AudioServiceProtocol {
     }
 
     func speak(_ text: String) {
-        // Increment BEFORE stopping any current utterance so that when
-        // didFinish fires for the interrupted utterance, activeSpeechCount
-        // is still ≥ 1 and ducking is not released prematurely.
+        speak(text, mood: .neutral)
+    }
+
+    func speak(_ text: String, mood: SpeechMood) {
         activeSpeechCount += 1
         reactivateSession()
         if synthesizer.isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
 
         let utterance = AVSpeechUtterance(string: text)
-        utterance.rate   = AVSpeechUtteranceDefaultSpeechRate
         utterance.volume = 1.0
         utterance.voice  = resolveVoice()
+
+        switch mood {
+        case .energetic:
+            utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 1.15
+            utterance.pitchMultiplier = 1.15
+        case .calm:
+            utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.9
+            utterance.pitchMultiplier = 0.9
+        case .neutral:
+            utterance.rate = AVSpeechUtteranceDefaultSpeechRate
+            utterance.pitchMultiplier = 1.0
+        }
+
         synthesizer.speak(utterance)
     }
 

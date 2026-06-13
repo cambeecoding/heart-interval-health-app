@@ -19,7 +19,7 @@ final class IntervalTimerEngineTests: XCTestCase {
         completed = false
 
         engine.onPhaseChange = { [unowned self] phase in phases.append(phase) }
-        engine.onAudioCue = { [unowned self] cue in cues.append(cue) }
+        engine.onAudioCue = { [unowned self] cue, _ in cues.append(cue) }
         engine.onBeep = { [unowned self] in beepCount += 1 }
         engine.onSessionComplete = { [unowned self] in completed = true }
     }
@@ -105,13 +105,13 @@ final class IntervalTimerEngineTests: XCTestCase {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 60))
         // midpoint at countdown==30, so tick from 60 down to 30 = 30 ticks
         tick(30)
-        XCTAssertTrue(cues.contains("30 seconds remaining."))
+        XCTAssertTrue(cues.contains("Halfway."))
     }
 
     func test_warmupMidpointAndTenSecond() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 90))
         tick(80)
-        XCTAssertTrue(cues.contains("45 seconds remaining."))
+        XCTAssertTrue(cues.contains("Halfway."))
         XCTAssertTrue(cues.contains("10 seconds."))
     }
 
@@ -132,18 +132,18 @@ final class IntervalTimerEngineTests: XCTestCase {
 
     func test_workRoundCue() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 3, warmupDuration: 0))
-        XCTAssertTrue(cues.contains("Round 1. Work."))
+        XCTAssertTrue(cues.contains("Round 1. Work!"))
     }
 
     func test_lastRoundCue() {
         engine.start(config: IntervalConfig(workDuration: 2, restDuration: 1, rounds: 2, warmupDuration: 0))
         tick(3) // work(1)=2 + rest(1)=1 → work(2) starts
-        XCTAssertTrue(cues.contains("Last round. Work."))
+        XCTAssertTrue(cues.contains("Last round. Work!"))
     }
 
     func test_singleRound_isLastRound() {
         engine.start(config: IntervalConfig(workDuration: 5, restDuration: 3, rounds: 1, warmupDuration: 0))
-        XCTAssertTrue(cues.contains("Last round. Work."))
+        XCTAssertTrue(cues.contains("Last round. Work!"))
     }
 
     func test_10sWarningOnLongWork() {

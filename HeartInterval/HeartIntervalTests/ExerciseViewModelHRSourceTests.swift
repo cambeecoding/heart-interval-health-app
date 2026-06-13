@@ -6,6 +6,7 @@ import XCTest
 final class SpyHealthKitService: HealthKitServicing {
     var authorizationResult = true
     var recentSampleResult: Double? = nil
+    var profileResult = UserProfile()
     var observingSince: Date?
     var observingHandler: ((Double, Date) -> Void)?
     var stopObservingCalls = 0
@@ -25,6 +26,10 @@ final class SpyHealthKitService: HealthKitServicing {
     func fetchRecentSample(within seconds: TimeInterval, completion: @escaping (Double?) -> Void) {
         recentSampleCalls += 1
         completion(recentSampleResult)
+    }
+
+    func fetchUserProfile(completion: @escaping (UserProfile) -> Void) {
+        completion(profileResult)
     }
 
     func stopObservingHeartRate() { stopObservingCalls += 1 }

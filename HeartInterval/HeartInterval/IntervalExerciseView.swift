@@ -20,13 +20,13 @@ struct IntervalExerciseView: View {
                         .foregroundColor(.white.opacity(0.4))
 
                     // Countdown
-                    Text("\(viewModel.intervalCountdown)")
+                    Text(formattedCountdown(viewModel.intervalCountdown))
                         .font(.system(size: 80, weight: .ultraLight, design: .rounded))
                         .foregroundColor(phaseColor)
                         .contentTransition(.numericText())
                         .animation(.easeInOut(duration: 0.3), value: viewModel.intervalCountdown)
 
-                    Text("seconds remaining")
+                    Text(viewModel.intervalCountdown > 59 ? "minutes remaining" : "seconds remaining")
                         .font(.caption2)
                         .foregroundColor(.white.opacity(0.3))
 
@@ -236,6 +236,13 @@ struct IntervalExerciseView: View {
         case .watch: return "Apple Watch"
         case .healthKit, .none: return "Apple Health"
         }
+    }
+
+    private func formattedCountdown(_ seconds: Int) -> String {
+        if seconds <= 59 { return "\(seconds)" }
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%d:%02d", m, s)
     }
 
     private func formattedTime(_ totalSeconds: Int) -> String {

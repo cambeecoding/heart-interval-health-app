@@ -49,15 +49,30 @@ final class ExerciseViewModel: ObservableObject {
         }
     }
 
-    // MARK: - UserDefaults-backed HR range
-    var minHR: Int {
-        get { UserDefaults.standard.object(forKey: "minHR") as? Int ?? 120 }
-        set { UserDefaults.standard.set(newValue, forKey: "minHR"); objectWillChange.send() }
+    // MARK: - Heart rate zones
+    var heartRateZones: HeartRateZones {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: "heartRateZones"),
+                  let zones = try? JSONDecoder().decode(HeartRateZones.self, from: data)
+            else { return .default }
+            return zones
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: "heartRateZones")
+            }
+            objectWillChange.send()
+        }
     }
-    var maxHR: Int {
-        get { UserDefaults.standard.object(forKey: "maxHR") as? Int ?? 160 }
-        set { UserDefaults.standard.set(newValue, forKey: "maxHR"); objectWillChange.send() }
+
+    /// Selected zone index (0-3 selectable on standby; 0=Recovery, 1=FatBurn, 2=Aerobic, 3=Threshold)
+    var selectedZone: Int {
+        get { UserDefaults.standard.object(forKey: "selectedZone") as? Int ?? 2 }
+        set { UserDefaults.standard.set(newValue, forKey: "selectedZone"); objectWillChange.send() }
     }
+
+    var minHR: Int { heartRateZones[selectedZone].minBPM }
+    var maxHR: Int { heartRateZones[selectedZone].maxBPM }
 
     // MARK: - UserDefaults-backed announcement settings
     /// Seconds between current BPM announcements. 0 = off.
@@ -78,6 +93,78 @@ final class ExerciseViewModel: ObservableObject {
         if speakInterval > 0 { return speakInterval }
         if summaryInterval > 0 { return summaryInterval }
         return 60
+    }
+
+    // MARK: - UserDefaults-backed user profile
+    var userAge: Int? {
+        get { UserDefaults.standard.object(forKey: "userAge") as? Int }
+        set {
+            if let v = newValue { UserDefaults.standard.set(v, forKey: "userAge") }
+            else { UserDefaults.standard.removeObject(forKey: "userAge") }
+            objectWillChange.send()
+        }
+    }
+
+    var userSex: BiologicalSex? {
+        get {
+            guard let raw = UserDefaults.standard.string(forKey: "userSex") else { return nil }
+            return BiologicalSex(rawValue: raw)
+        }
+        set {
+            if let v = newValue { UserDefaults.standard.set(v.rawValue, forKey: "userSex") }
+            else { UserDefaults.standard.removeObject(forKey: "userSex") }
+            objectWillChange.send()
+        }
+    }
+
+    var restingHR: Int? {
+        get { UserDefaults.standard.object(forKey: "restingHR") as? Int }
+        set {
+            if let v = newValue { UserDefaults.standard.set(v, forKey: "restingHR") }
+            else { UserDefaults.standard.removeObject(forKey: "restingHR") }
+            objectWillChange.send()
+        }
+    }
+
+    /// Whether zones were auto-set (vs manually adjusted by user).
+    var zonesAutoSet: Bool {
+        get { UserDefaults.standard.bool(forKey: "zonesAutoSet") }
+        set { UserDefaults.standard.set(newValue, forKey: "zonesAutoSet"); objectWillChange.send() }
+    }
+
+    /// Calculates and applies HR zones using Karvonen method. Returns true if zones were updated.
+    @discardableResult
+    func autoCalculateZones() -> Bool {
+        guard let age = userAge, age > 0, let rhr = restingHR, rhr > 0 else { return false }
+        heartRateZones = HeartRateZones.calculate(age: age, restingHR: rhr)
+        zonesAutoSet = true
+        return true
+    }
+
+    func fetchProfileFromHealthKit() {
+        healthKitService.fetchUserProfile { [weak self] profile in
+            guard let self else { return }
+            var updated = false
+            if let age = profile.age, self.userAge == nil {
+                self.userAge = age
+                updated = true
+            }
+            if let sex = profile.sex, self.userSex == nil {
+                self.userSex = sex
+                updated = true
+            }
+            if let rhr = profile.restingHR, self.restingHR == nil {
+                self.restingHR = rhr
+                updated = true
+            }
+            if updated && !self.hasManualZones {
+                self.autoCalculateZones()
+            }
+        }
+    }
+
+    private var hasManualZones: Bool {
+        UserDefaults.standard.data(forKey: "heartRateZones") != nil && !zonesAutoSet
     }
 
     // MARK: - UserDefaults-backed training mode
@@ -366,8 +453,8 @@ final class ExerciseViewModel: ObservableObject {
             engine.onCountdownTick = { [weak self] countdown in
                 self?.intervalCountdown = countdown
             }
-            engine.onAudioCue = { [weak self] cue in
-                self?.audioService.speak(cue)
+            engine.onAudioCue = { [weak self] cue, mood in
+                self?.audioService.speak(cue, mood: mood)
             }
             engine.onBeep = { [weak self] in
                 self?.audioService.playTick()
@@ -588,18 +675,24 @@ final class ExerciseViewModel: ObservableObject {
         if hr > maxHR {
             if !isAboveMax {
                 isAboveMax = true
-                audioService.speak("Maximum heart rate reached")
+                audioService.speak("Zone heartrate exceeded")
             }
         } else {
-            isAboveMax = false
+            if isAboveMax {
+                isAboveMax = false
+                audioService.speak("Back in zone. Heart rate \(hr).")
+            }
         }
         if hr < minHR {
             if !isBelowMin {
                 isBelowMin = true
-                audioService.speak("Minimum heart rate reached")
+                audioService.speak("Heartrate lower than zone minimum")
             }
         } else {
-            isBelowMin = false
+            if isBelowMin {
+                isBelowMin = false
+                audioService.speak("Back in zone. Heart rate \(hr).")
+            }
         }
     }
 
