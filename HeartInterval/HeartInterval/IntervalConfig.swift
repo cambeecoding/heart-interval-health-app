@@ -27,4 +27,9 @@ enum IntervalPhase: Equatable {
     case work(round: Int)
     case rest(round: Int)
     case finished
+
+    var isWork: Bool {
+        if case .work = self { return true }
+        return false
+    }
 }

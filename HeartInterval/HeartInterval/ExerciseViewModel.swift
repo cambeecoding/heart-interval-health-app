@@ -366,8 +366,8 @@ final class ExerciseViewModel: ObservableObject {
             engine.onCountdownTick = { [weak self] countdown in
                 self?.intervalCountdown = countdown
             }
-            engine.onAudioCue = { [weak self] cue in
-                self?.audioService.speak(cue)
+            engine.onAudioCue = { [weak self] cue, mood in
+                self?.audioService.speak(cue, mood: mood)
             }
             engine.onBeep = { [weak self] in
                 self?.audioService.playTick()
@@ -588,18 +588,24 @@ final class ExerciseViewModel: ObservableObject {
         if hr > maxHR {
             if !isAboveMax {
                 isAboveMax = true
-                audioService.speak("Maximum heart rate reached")
+                audioService.speak("Zone heartrate exceeded")
             }
         } else {
-            isAboveMax = false
+            if isAboveMax {
+                isAboveMax = false
+                audioService.speak("Back in zone. Heart rate \(hr).")
+            }
         }
         if hr < minHR {
             if !isBelowMin {
                 isBelowMin = true
-                audioService.speak("Minimum heart rate reached")
+                audioService.speak("Heartrate lower than zone minimum")
             }
         } else {
-            isBelowMin = false
+            if isBelowMin {
+                isBelowMin = false
+                audioService.speak("Back in zone. Heart rate \(hr).")
+            }
         }
     }
 

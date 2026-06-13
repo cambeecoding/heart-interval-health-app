@@ -9,6 +9,7 @@ final class SpyAudioService: AudioServiceProtocol {
     var tickCount = 0
     var goCount = 0
     func speak(_ text: String)   { spoken.append(text) }
+    func speak(_ text: String, mood: SpeechMood) { spoken.append(text) }
     func playTick()              { tickCount += 1 }
     func playGo()                { goCount += 1 }
     func startSilentLoop()       {}
@@ -212,7 +213,7 @@ final class ExerciseViewModelTests: XCTestCase {
         vm.appState = .exercising
         vm.handleNewHRSample(170, source: .none)
         vm.handleNewHRSample(172, source: .none)
-        XCTAssertEqual(spy.spoken.filter { $0.contains("Maximum") }.count, 1,
+        XCTAssertEqual(spy.spoken.filter { $0.contains("exceeded") }.count, 1,
                        "Above-max alert must fire exactly once per breach")
     }
 
@@ -223,7 +224,7 @@ final class ExerciseViewModelTests: XCTestCase {
         vm.appState = .exercising
         vm.handleNewHRSample(110, source: .none)
         vm.handleNewHRSample(108, source: .none)
-        XCTAssertEqual(spy.spoken.filter { $0.contains("Minimum") }.count, 1,
+        XCTAssertEqual(spy.spoken.filter { $0.contains("zone minimum") }.count, 1,
                        "Below-min alert must fire exactly once per breach")
     }
 
@@ -235,8 +236,10 @@ final class ExerciseViewModelTests: XCTestCase {
         vm.handleNewHRSample(170, source: .none)
         vm.handleNewHRSample(155, source: .none)
         vm.handleNewHRSample(165, source: .none)
-        XCTAssertEqual(spy.spoken.filter { $0.contains("Maximum") }.count, 2,
+        XCTAssertEqual(spy.spoken.filter { $0.contains("exceeded") }.count, 2,
                        "Alert should fire again after HR normalises and re-breaches")
+        XCTAssertEqual(spy.spoken.filter { $0.contains("Back in zone") }.count, 1,
+                       "Re-entry announcement should fire when HR returns to zone")
     }
 
     func test_zoneAlert_suppressedWhenPaused() {

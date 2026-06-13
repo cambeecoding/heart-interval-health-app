@@ -17,7 +17,7 @@ protocol IntervalTimerEngineProtocol: AnyObject {
 
     var onPhaseChange: ((IntervalPhase) -> Void)? { get set }
     var onCountdownTick: ((Int) -> Void)? { get set }
-    var onAudioCue: ((String) -> Void)? { get set }
+    var onAudioCue: ((String, SpeechMood) -> Void)?  { get set }
     var onBeep: (() -> Void)? { get set }
     var onSessionComplete: (() -> Void)? { get set }
 
@@ -37,7 +37,7 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
 
     var onPhaseChange: ((IntervalPhase) -> Void)?
     var onCountdownTick: ((Int) -> Void)?
-    var onAudioCue: ((String) -> Void)?
+    var onAudioCue: ((String, SpeechMood) -> Void)?
     var onBeep: (() -> Void)?
     var onSessionComplete: (() -> Void)?
 
@@ -185,27 +185,38 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
 
     // MARK: - Audio cues
 
+    private func moodForPhase(_ phase: IntervalPhase?) -> SpeechMood {
+        switch phase {
+        case .work: return .energetic
+        case .rest: return .calm
+        default: return .neutral
+        }
+    }
+
+    private func spokenDuration(_ seconds: Int) -> String {
+        let mins = seconds / 60
+        let secs = seconds % 60
+        if mins == 0 { return "\(secs) seconds" }
+        if secs == 0 { return "\(mins) \(mins == 1 ? "minute" : "minutes")" }
+        return "\(mins) \(mins == 1 ? "minute" : "minutes") \(secs) seconds"
+    }
+
     private func emitPhaseStartCue(_ phase: IntervalPhase) {
+        let mood = moodForPhase(phase)
         switch phase {
         case .warmup:
-            let mins = config.warmupDuration / 60
-            let secs = config.warmupDuration % 60
-            if mins > 0 && secs == 0 {
-                onAudioCue?("Warm up. \(mins) \(mins == 1 ? "minute" : "minutes").")
-            } else {
-                onAudioCue?("Warm up. \(config.warmupDuration) seconds.")
-            }
+            onAudioCue?("Warm up. \(spokenDuration(config.warmupDuration)).", .neutral)
         case .work(let round):
             if round == totalRounds {
-                onAudioCue?("Last round. Work.")
+                onAudioCue?("Last round. Work!", mood)
             } else {
-                onAudioCue?("Round \(round). Work.")
+                onAudioCue?("Round \(round). Work!", mood)
             }
         case .rest:
             if let hr = currentHR {
-                onAudioCue?("Rest. Heart rate \(hr).")
+                onAudioCue?("Rest. Heart rate \(hr).", mood)
             } else {
-                onAudioCue?("Rest.")
+                onAudioCue?("Rest.", mood)
             }
         case .finished:
             break
@@ -215,32 +226,27 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
     private func emitTickCues() {
         guard let phase = currentPhase else { return }
         let duration = durationForCurrentPhase()
+        let mood = moodForPhase(phase)
 
-        // Phase-specific voice cues
-        switch phase {
-        case .warmup:
-            let d = config.warmupDuration
-            if d >= 20 {
-                let half = d / 2
-                if countdown == half && half > 10 && half > 3 {
-                    onAudioCue?("\(countdown) seconds remaining.")
-                }
-            }
-            if d > 15 && countdown == 10 {
-                onAudioCue?("10 seconds.")
-            }
-        case .work:
-            if duration > 15 && countdown == 10 {
-                onAudioCue?("10 seconds.")
-            }
+        // Every-minute markers for phases longer than 2 minutes
+        if duration > 120 && countdown > 10 && countdown % 60 == 0 {
+            onAudioCue?("\(spokenDuration(countdown)) remaining.", mood)
+        }
+
+        // Halfway marker (only if it doesn't collide with a minute marker)
+        if phase.isWork || phase == .warmup {
             if duration >= 10 {
                 let half = duration / 2
-                if countdown == half && half != 10 && half > 3 {
-                    onAudioCue?("Halfway.")
+                let isMinuteBoundary = duration > 120 && half % 60 == 0
+                if countdown == half && half > 10 && !isMinuteBoundary {
+                    onAudioCue?("Halfway.", mood)
                 }
             }
-        case .rest, .finished:
-            break
+        }
+
+        // 10 seconds warning for all active phases
+        if duration > 15 && countdown == 10 {
+            onAudioCue?("10 seconds.", mood)
         }
 
         // 3-2-1 beep countdown for all phases
@@ -258,6 +264,6 @@ final class IntervalTimerEngine: IntervalTimerEngineProtocol {
             let peak = Int(allSamples.map(\.bpm).max()!.rounded())
             parts.append("Peak \(peak).")
         }
-        onAudioCue?(parts.joined(separator: " "))
+        onAudioCue?(parts.joined(separator: " "), .neutral)
     }
 }
