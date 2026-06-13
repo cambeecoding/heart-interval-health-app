@@ -34,6 +34,7 @@
 		A033 /* IntervalStandbySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* IntervalStandbySection.swift */; };
 		A034 /* IntervalExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F034 /* IntervalExerciseView.swift */; };
 		A035 /* IntervalSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F035 /* IntervalSummaryView.swift */; };
+		A036 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F036 /* SettingsView.swift */; };
 		T001 /* ExerciseViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF01 /* ExerciseViewModelTests.swift */; };
 		T002 /* ExerciseViewModelHRSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TFHR /* ExerciseViewModelHRSourceTests.swift */; };
 		T003 /* WatchConnectivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = TF03 /* WatchConnectivityTests.swift */; };
@@ -100,6 +101,7 @@
 		F033 /* IntervalStandbySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalStandbySection.swift; sourceTree = "<group>"; };
 		F034 /* IntervalExerciseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalExerciseView.swift; sourceTree = "<group>"; };
 		F035 /* IntervalSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntervalSummaryView.swift; sourceTree = "<group>"; };
+		F036 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		FXCV /* BuildVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = BuildVersion.xcconfig; sourceTree = "<group>"; };
 		PROD /* BeatZone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BeatZone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		TF01 /* ExerciseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseViewModelTests.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				F033 /* IntervalStandbySection.swift */,
 				F034 /* IntervalExerciseView.swift */,
 				F035 /* IntervalSummaryView.swift */,
+				F036 /* SettingsView.swift */,
 			);
 			path = HeartInterval;
 			sourceTree = "<group>";
@@ -408,6 +411,7 @@
 				A033 /* IntervalStandbySection.swift in Sources */,
 				A034 /* IntervalExerciseView.swift in Sources */,
 				A035 /* IntervalSummaryView.swift in Sources */,
+				A036 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

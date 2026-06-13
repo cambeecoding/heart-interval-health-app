@@ -2,17 +2,7 @@ import SwiftUI
 
 struct StandbyView: View {
     @ObservedObject var viewModel: ExerciseViewModel
-
-    private let speakOptions:   [(label: String, value: Int)] = [
-        ("Off", 0), ("30s", 30), ("1 min", 60), ("2 min", 120), ("3 min", 180)
-    ]
-    private let summaryOptions: [(label: String, value: Int)] = [
-        ("Off", 0), ("2 min", 120), ("3 min", 180), ("5 min", 300), ("10 min", 600)
-    ]
-
-    private let countdownOptions: [(label: String, value: Int)] = [
-        ("Off", 0), ("3s", 3), ("5s", 5)
-    ]
+    @State private var showSettings = false
 
     var body: some View {
         ZStack {
@@ -28,10 +18,23 @@ struct StandbyView: View {
 
                     Spacer().frame(height: 12)
 
-                    Text("BeatZone")
-                        .font(.title)
-                        .fontWeight(.light)
-                        .foregroundColor(.white.opacity(0.6))
+                    HStack {
+                        Spacer()
+                        Text("BeatZone")
+                            .font(.title)
+                            .fontWeight(.light)
+                            .foregroundColor(.white.opacity(0.6))
+                        Spacer()
+                    }
+                    .overlay(alignment: .trailing) {
+                        Button(action: { showSettings = true }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white.opacity(0.4))
+                                .frame(width: 36, height: 36)
+                        }
+                        .padding(.trailing, 16)
+                    }
 
                     let ble   = viewModel.bleSourceStatus
                     let watch = viewModel.watchSourceStatus
@@ -58,42 +61,22 @@ struct StandbyView: View {
 
                     // ── Mode-specific config ─────────────────────────────
                     if viewModel.trainingMode == .zone {
-                        VStack(spacing: 14) {
-                            AnnouncementPickerRow(
-                                label: "Speak every",
-                                options: speakOptions,
-                                selected: $viewModel.speakInterval
-                            )
-                            AnnouncementPickerRow(
-                                label: "Summary every",
-                                options: summaryOptions,
-                                selected: $viewModel.summaryInterval
-                            )
-                            WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
-                        }
+                        ZonePicker(
+                            zones: viewModel.heartRateZones,
+                            selected: $viewModel.selectedZone
+                        )
                         .padding(.horizontal, 16)
-                        .padding(.bottom, 24)
-
-                        HRRangeSlider(range: 80...180, low: $viewModel.minHR, high: $viewModel.maxHR)
-                            .padding(.bottom, 16)
+                        .padding(.bottom, 12)
                     } else {
                         IntervalStandbySection(viewModel: viewModel)
                             .padding(.horizontal, 16)
                             .padding(.bottom, 12)
-
-                        WorkoutTypePickerRow(selected: $viewModel.selectedActivityType)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 16)
                     }
 
-                    // ── Start countdown (shared) ─────────────────────────
-                    AnnouncementPickerRow(
-                        label: "Start countdown",
-                        options: countdownOptions,
-                        selected: $viewModel.startCountdown
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    // ── Workout type (per-exercise) ─────────────────────
+                    WorkoutTypeRow(selected: $viewModel.selectedActivityType)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
 
                     // ── Start button ─────────────────────────────────────
                     Button(action: { viewModel.startExercise() }) {
@@ -108,6 +91,9 @@ struct StandbyView: View {
                     Spacer().frame(height: 40)
                 }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(viewModel: viewModel)
         }
     }
 
@@ -144,9 +130,46 @@ private struct StatusRow: View {
     }
 }
 
+// MARK: - Zone picker (Z1-Z4 only)
+
+private struct ZonePicker: View {
+    let zones: HeartRateZones
+    @Binding var selected: Int
+
+    private let selectableCount = 4
+    private let colors: [Color] = [.green, .yellow, .orange, .red]
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 5) {
+                ForEach(0..<selectableCount, id: \.self) { i in
+                    Button(action: { selected = i }) {
+                        VStack(spacing: 2) {
+                            Text(HeartRateZones.names[i])
+                                .font(.system(size: 10, weight: .medium))
+                            Text("\(zones[i].minBPM)-\(zones[i].maxBPM)")
+                                .font(.system(size: 9))
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(selected == i ? colors[i].opacity(0.25) : Color.white.opacity(0.06))
+                        .foregroundColor(selected == i ? colors[i] : .white.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(selected == i ? colors[i].opacity(0.5) : Color.clear, lineWidth: 1)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Workout type picker
 
-private struct WorkoutTypePickerRow: View {
+private struct WorkoutTypeRow: View {
     @Binding var selected: WorkoutActivityType
 
     var body: some View {
@@ -173,33 +196,3 @@ private struct WorkoutTypePickerRow: View {
     }
 }
 
-// MARK: - Picker row
-
-private struct AnnouncementPickerRow: View {
-    let label: String
-    let options: [(label: String, value: Int)]
-    @Binding var selected: Int
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.45))
-
-            HStack(spacing: 6) {
-                ForEach(options, id: \.value) { option in
-                    Button(action: { selected = option.value }) {
-                        Text(option.label)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 32)
-                            .background(selected == option.value ? Color.blue : Color.white.opacity(0.08))
-                            .foregroundColor(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                }
-            }
-        }
-    }
-}
