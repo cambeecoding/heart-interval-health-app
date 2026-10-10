@@ -3,7 +3,7 @@
 # Run before archiving or let the Xcode build phase handle it.
 set +e
 cd "$(dirname "$0")"
-TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+TAG=$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null)
 # Extract version numbers, then trim to at most 3 parts (X.Y.Z) — App Store requirement
 FULL_VER=$(echo "$TAG" | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)*' | head -1)
 VERSION=$(echo "$FULL_VER" | cut -d. -f1-3)
